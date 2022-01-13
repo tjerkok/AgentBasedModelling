@@ -16,9 +16,12 @@ class OurModel(Model):
         self.n_items = config["n_items"]
         self.grid_layout = config["grid_layout"]
         self.avg_arrival = config["avg_arrival"]
+        self.n_steps = config["n_steps"]
         self.obstacles = []
         self.persons = []
         self.arrival_times = [0]
+        self.entry_pos = (0,0)
+        self.exit_pos = (0,0)
 
         # scheduling Poisson distribution times of persons arriving
         for i in range(self.n_persons - 1):
@@ -34,8 +37,8 @@ class OurModel(Model):
             #TODO
         })
 
-        # creating persons
-        self.init_population(self.n_persons)
+        # # creating persons
+        # self.init_population(self.n_persons)
 
         # datacollector requirements
         self.running = True
@@ -48,16 +51,20 @@ class OurModel(Model):
         with open(self.grid_layout, 'r') as f:
             lines = f.readlines()
             for line in lines[1:]:
-                line = line.strip("\n").split(",")                
+                line = line.strip("\n").split(",")
                 obs_type = line[0]
                 pos = (int(line[1]), int(line[2]))
                 obstacle = Obstacle(self.next_id(), pos, self, type=obs_type)
                 self.grid.place_agent(obstacle, pos)
                 self.obstacles.append(obstacle)
+                if obs_type == "entry":
+                    self.entry_pos = pos
+                elif obs_type == "exit":
+                    self.exit_pos = pos
 
     def init_population(self, n):
         """
-        Creates population and places all on specific/random spot
+        Creates population and places all on specific/random spot (not in use now)
         """
         for i in range(n):
             pos = (random.randrange(self.width), random.randrange(self.height))
