@@ -1,6 +1,7 @@
 from mesa import Agent
 import numpy as np
 import random
+import networkx as nx
 
 class Person(Agent):
     def __init__(self, unique_id, pos, model, objectives, moore=False, speed=1):
@@ -60,17 +61,24 @@ class Person(Agent):
         # for move in possible_moves:
         #     if np.abs(move[0] - self.current_objective[1][0]) < np.abs(self.pos[0] - self.current_objective[1][0]) and move not in obstacles:
         #         return move
-        
-        # move = self.astar_move()
-        move = self.random_move()
+
+        # Uncomment according to chosen move
+        move = self.astar_move()
+        #move = self.random_move()
         return move
-    
+
+
+    def dist(self, a, b):
+        (x1, y1) = a
+        (x2, y2) = b
+        return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+
     def astar_move(self):
-        """
-        Use graph
-        """
-        raise NotImplementedError
-    
+        route = nx.astar_path(self.model.graph, self.pos, self.current_objective[1], heuristic=self.dist)
+        return route[1]
+
+
     def random_move(self):
         x, y = self.pos
         move = random.choice([(x+1, y), (x-1, y), (x, y+1), (x, y-1)])
