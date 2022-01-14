@@ -1,6 +1,3 @@
-from collections import deque
-
-
 class Astar:
     def __init__(self, lis, height, width):
         self.lis = lis
