@@ -64,7 +64,7 @@ class Person(Agent):
         #         return move
 
         # Uncomment according to chosen move
-        move = self.astar_move()
+        move = self.random.choice([self.astar_move(),self.astar_move(),self.random_move()])
         #move = self.random_move()
         return move
 
