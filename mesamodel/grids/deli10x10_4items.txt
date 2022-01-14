@@ -1,0 +1,15 @@
+type,x,y
+entry,1,9
+exit,7,9
+snack,3,5
+snack,3,6
+snack,3,7
+soda,3,1
+soda,3,2
+soda,3,3
+sandwiches,6,1
+sandwiches,6,2
+sandwiches,6,3
+alcohol,6,5
+alcohol,6,6
+alcohol,6,7
