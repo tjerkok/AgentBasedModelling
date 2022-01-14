@@ -60,10 +60,21 @@ class Person(Agent):
         # for move in possible_moves:
         #     if np.abs(move[0] - self.current_objective[1][0]) < np.abs(self.pos[0] - self.current_objective[1][0]) and move not in obstacles:
         #         return move
+        # move = self.astar_move()
+        move = self.random_move()
+        return move
+    
+    def astar_move(self):
+        """
+        Use graph
+        """
+        raise NotImplementedError
+    
+    def random_move(self):
         x, y = self.pos
         move = random.choice([(x+1, y), (x-1, y), (x, y+1), (x, y-1)])
         return move
-    
+
     def __repr__(self):
         return f"Person {self.unique_id} at {self.pos}"
     

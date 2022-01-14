@@ -53,15 +53,13 @@ class GroceryModel(Model):
         """
         Create grid from grid_layout.txt
         """
-        
+        objective_positions = []
         with open(self.grid_layout, 'r') as f:
             lines = f.readlines()
             for line in lines[1:]:
                 line = line.strip("\n").split(",")
                 obs_type = line[0]
                 pos = (int(line[1]), int(line[2]))
-                
-                
                 
                 if obs_type == "entry":
                     self.entry_pos = pos
@@ -75,10 +73,16 @@ class GroceryModel(Model):
                     for n in list(self.graph.neighbors(pos)):
                         self.graph.remove_edge(pos, n)
                 else:
-                    self.graph.nodes[pos]["type"] = obs_type
+                    for n in list(self.graph.neighbors(pos)):
+                        if n in objective_positions:
+                            self.graph.remove_edge(n, pos)
+                    self.graph.nodes[pos]["type"] = "objective"
                     if obs_type not in self.objectives.keys():
                         self.objectives[obs_type] = []
                     self.objectives[obs_type].append(pos)
+                    objective_positions.append(pos)
+
+
 
     def add_person(self):
         # specify speed? Moore? pos?
@@ -110,5 +114,5 @@ if __name__ == "__main__":
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    model = OurModel(config)
+    model = GroceryModel(config)
     model.run_model()
