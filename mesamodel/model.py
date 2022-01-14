@@ -1,12 +1,14 @@
 from mesa import Model
 from mesa.datacollection import DataCollector
-from mesa.space import Grid
+from mesa.space import SingleGrid
 from mesa.time import RandomActivation
+import networkx as nx
+import json
 import random
 
-from .agent import Person, Obstacle
+from agent import Person, Obstacle
 
-class OurModel(Model):
+class GroceryModel(Model):
     def __init__(self, config):
         # attributes
         super().__init__()
@@ -18,27 +20,30 @@ class OurModel(Model):
         self.avg_arrival = config["avg_arrival"]
         self.n_steps = config["n_steps"]
         self.obstacles = []
+        self.objectives = {}
         self.persons = []
         self.arrival_times = [0]
         self.entry_pos = (0,0)
         self.exit_pos = (0,0)
+        self.graph = nx.grid_2d_graph(self.height, self.width)
 
         # scheduling Poisson distribution times of persons arriving
         for i in range(self.n_persons - 1):
-            time = random.expovariate(1/self.avg_arrival)
+            time = int(round(random.expovariate(1/self.avg_arrival)))
             self.arrival_times.append(self.arrival_times[-1] + time)
 
         # schedule
         self.schedule = RandomActivation(self)
 
         # grid and datacollection
-        self.grid = Grid(self.width, self.height, torus=False)
-        self.datacollector = DataCollector({
-            #TODO
+        self.grid = SingleGrid(self.width, self.height, torus=False)
+        self.datacollector = DataCollector({ #TODO
+            "persons": lambda m: self.schedule.get_agent_count(),
+            "person_locs": lambda m: [person.pos for person in self.persons]
         })
 
-        # # creating persons
-        # self.init_population(self.n_persons)
+        # placing obstacles, entry and exit
+        self.read_grid()
 
         # datacollector requirements
         self.running = True
@@ -48,43 +53,43 @@ class OurModel(Model):
         """
         Create grid from grid_layout.txt
         """
+        
         with open(self.grid_layout, 'r') as f:
             lines = f.readlines()
             for line in lines[1:]:
                 line = line.strip("\n").split(",")
                 obs_type = line[0]
                 pos = (int(line[1]), int(line[2]))
-                obstacle = Obstacle(self.next_id(), pos, self, type=obs_type)
-                self.grid.place_agent(obstacle, pos)
-                self.obstacles.append(obstacle)
+                
+                
+                
                 if obs_type == "entry":
                     self.entry_pos = pos
                 elif obs_type == "exit":
                     self.exit_pos = pos
 
-    def init_population(self, n):
-        """
-        Creates population and places all on specific/random spot (not in use now)
-        """
-        for i in range(n):
-            pos = (random.randrange(self.width), random.randrange(self.height))
-            # specify speed? Moore? pos?
-            person = Person(self.next_id(), pos, self, infected=False)
-            self.grid.place_agent(person, pos)
-            self.persons.append(person)
-            self.schedule.add(person)
+                if obs_type == "wall":
+                    obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=obs_type)
+                    self.obstacles.append(obstacle)
+                    self.grid.place_agent(obstacle, pos)
+                    for n in list(self.graph.neighbors(pos)):
+                        self.graph.remove_edge(pos, n)
+                else:
+                    self.graph.nodes[pos]["type"] = obs_type
+                    if obs_type not in self.objectives.keys():
+                        self.objectives[obs_type] = []
+                    self.objectives[obs_type].append(pos)
 
     def add_person(self):
-        pos = (random.randrange(self.width), random.randrange(self.height))
         # specify speed? Moore? pos?
-        person = Person(self.next_id(), pos, self, infected=False)
-        self.grid.place_agent(person, pos)
+        person = Person(self.next_id(), self.entry_pos, self, objectives=["chicken", "exit"])
+        self.grid.place_agent(person, self.entry_pos)
         self.persons.append(person)
         self.schedule.add(person)
 
     def step(self):
         """
-        Calls steph method for each person
+        Calls step method for each person
         """
         self.schedule.step()
 
@@ -92,11 +97,18 @@ class OurModel(Model):
         """
         Runs the model for n_steps
         """
-        for i in range(n_steps):
+        for i in range(self.n_steps):
+            print(f"{i} | arrival_times: {self.arrival_times}")
             if i in self.arrival_times:
+                print(f"arriving!")
                 self.add_person()
             self.step()
     
 
 if __name__ == "__main__":
-    print("not ready")
+
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    model = OurModel(config)
+    model.run_model()
