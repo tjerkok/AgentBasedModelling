@@ -60,6 +60,7 @@ class Person(Agent):
         # for move in possible_moves:
         #     if np.abs(move[0] - self.current_objective[1][0]) < np.abs(self.pos[0] - self.current_objective[1][0]) and move not in obstacles:
         #         return move
+        
         # move = self.astar_move()
         move = self.random_move()
         return move

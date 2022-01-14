@@ -73,15 +73,14 @@ class GroceryModel(Model):
                     for n in list(self.graph.neighbors(pos)):
                         self.graph.remove_edge(pos, n)
                 else:
-                    for n in list(self.graph.neighbors(pos)):
-                        if n in objective_positions:
-                            self.graph.remove_edge(n, pos)
+                    # for n in list(self.graph.neighbors(pos)):
+                    #     if n in objective_positions:
+                    #         self.graph.remove_edge(n, pos)
                     self.graph.nodes[pos]["type"] = "objective"
                     if obs_type not in self.objectives.keys():
                         self.objectives[obs_type] = []
                     self.objectives[obs_type].append(pos)
                     objective_positions.append(pos)
-
 
 
     def add_person(self):
