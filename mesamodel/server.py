@@ -2,7 +2,7 @@ from mesa.visualization.modules import CanvasGrid, ChartModule, PieChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
 
-from .model import OurModel
+from .model import GroceryModel
 from .utils import read_json, read_yaml
 
 # voorbeeld: https://github.com/projectmesa/mesa/blob/main/examples/forest_fire/forest_fire/server.py
@@ -35,7 +35,7 @@ model_params = {
 }
 
 server = ModularServer(
-    OurModel, [canvas_element, tree_chart, pie_chart], "Our Model", model_params
+    GroceryModel, [canvas_element, tree_chart, pie_chart], "Our Model", model_params
 )
 
 
