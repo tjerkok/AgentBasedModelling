@@ -54,7 +54,7 @@ class Astar:
 
                 route.reverse()
 
-                print('Path found: {}'.format(route))
+                #print('Route found: {}'.format(route))
                 return route
 
             # for all the neighbors of the coordinate execute the following:
@@ -88,11 +88,42 @@ class Astar:
 
 
 adjac_lis = {
-    '0.0': [('1.0', 1), ('2.0', 1)],
-    '1.0': [('3.0', 1)],
-    '2.0': [('3.0', 1)]
+    '0.0': [('1.0', 1), ('0.1', 1)],
+    '1.0': [('0.0', 1), ('1.0', 1), ('0.1', 1)],
+    '2.0': [('1.0', 1), ('2.1', 1)],
+    '0.1': [('0.0', 1), ('0.2', 1), ('1.1', 1)],
+    '0.2': [('1.2', 1), ('0.1', 1)],
+    '1.1': [('1.0', 1), ('2.1', 1), ('1.2', 1), ('0.1', 1)],
+    '1.2': [('2.2', 1), ('1.1', 1), ('0.2', 1)],
+    '2.1': [('2.0', 1), ('2.2', 1), ('1.1', 1)],
+    '2.2': [('1.2', 1), ('2.1', 1)]
 }
 
-graph1 = Astar(adjac_lis, 1, 4)
-graph1.a_star_algo('0.0', '3.0')
+def sortlist(list):
+    x = lambda index: index[1]
+    list.sort(key=x)
+    print(f"gesorteerde route met afstand {list}")
+    newlist = []
+    for i in list:
+        newlist.append(i[0])
+    return newlist
+
+
+graph1 = Astar(adjac_lis, 3, 3)
+
+objectives = ['1.1', '2.2', '1.0']
+
+dis=[]
+for obj in objectives:
+    dis.append((obj, len(graph1.a_star_algo('0.0', obj))-1))
+print(f"niet gesorteerde route met afstand{dis}")
+
+
+gesorteerd = sortlist(dis)
+print(f"gesorteerde route zonder afstand {gesorteerd}")
+
+
+
+
+
 
