@@ -87,7 +87,7 @@ class GroceryModel(Model):
 
     def add_person(self):
         # specify speed? Moore? pos?
-        person = Person(self.next_id(), self.entry_pos, self, objectives=["chicken", "exit"])
+        person = Person(self.next_id(), self.entry_pos, self, objectives=["alcohol", "snack", "exit"])
         self.grid.place_agent(person, self.entry_pos)
         self.persons.append(person)
         self.schedule.add(person)

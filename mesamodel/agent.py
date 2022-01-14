@@ -39,6 +39,7 @@ class Person(Agent):
         if self.current_objective[0] == "exit":
             print(f"{self} is done shopping, removing...")
             self.model.grid.remove_agent(self)
+            self.model.schedule.remove(self)
         else:
             print(f"{self} got {self.current_objective[0]}!\n\n")
             self.basket.append(self.current_objective[0])

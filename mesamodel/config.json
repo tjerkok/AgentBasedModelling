@@ -1,1 +1,1 @@
-{"height": 10, "width": 10, "n_persons": 2, "n_items": 1, "grid_layout": "grids/simple_10x10.txt", "avg_arrival": 10, "n_steps": 100}
+{"height": 10, "width": 10, "n_persons": 2, "n_items": 1, "grid_layout": "grids/deli10x10_4items.txt", "avg_arrival": 10, "n_steps": 100}
