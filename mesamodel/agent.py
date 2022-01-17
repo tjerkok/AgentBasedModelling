@@ -20,6 +20,7 @@ class Person(Agent):
         self.moore = moore
         self.basket = []
         self.route = []
+        self.steps_instore = 0
 
 
     def get_objectives_coord(self):
@@ -48,6 +49,7 @@ class Person(Agent):
 
     def step(self):
         # Find next step
+        self.steps_instore += 1
         self.route.append(self.pos)
         next_move = self.find_route()
         print(f"planned move: {next_move}")

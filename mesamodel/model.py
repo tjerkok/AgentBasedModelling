@@ -39,7 +39,8 @@ class GroceryModel(Model):
         self.grid = SingleGrid(self.width, self.height, torus=False)
         self.datacollector = DataCollector({ #TODO
             "persons": lambda m: self.schedule.get_agent_count(),
-            "person_locs": lambda m: [person.pos for person in self.persons]
+            "person_locs": lambda m: [person.pos for person in self.persons],
+            "steps_in_stores": lambda m: [person.steps_instore for person in self.persons]
         })
 
         # placing obstacles, entry and exit
@@ -100,6 +101,7 @@ class GroceryModel(Model):
         Calls step method for each person
         """
         self.schedule.step()
+        self.datacollector.collect(self)
 
     def run_model(self, n_steps=100):
         """
@@ -111,6 +113,8 @@ class GroceryModel(Model):
                 print(f"arriving!")
                 self.add_person()
             self.step()
+            if self.schedule.get_agent_count() == 0 and i > self.arrival_times[-1]:
+                return
     
 
 if __name__ == "__main__":
