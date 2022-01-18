@@ -43,7 +43,9 @@ class GroceryModel(Model):
         self.datacollector = DataCollector({ #TODO
             "persons": lambda m: self.schedule.get_agent_count(),
             "person_locs": lambda m: [person.pos for person in self.persons],
-            "steps_in_stores": lambda m: [person.steps_instore for person in self.persons]
+            "steps_in_stores": lambda m: [person.steps_instore for person in self.persons],
+            "speed": lambda m: [person.speed for person in self.persons],
+            "familiar": lambda m: [person.familiar for person in self.persons]
         })
 
         # placing obstacles, entry and exit
@@ -92,7 +94,7 @@ class GroceryModel(Model):
     def add_person(self):
         # specify speed? Moore? pos?
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
-        familiar = random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0]
+        familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
         print(f"chose speed: {speed} and familiar: {familiar}")
         person = Person(self.next_id(), self.entry_pos, self, objectives=["bread", "chicken", "drinks", "exit"], familiar=familiar, speed=speed)
         if self.grid.is_cell_empty(self.entry_pos):

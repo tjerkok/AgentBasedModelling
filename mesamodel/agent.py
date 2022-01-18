@@ -51,20 +51,25 @@ class Person(Agent):
         # Find next step
         next_moves = self.find_route()
         print(f"planned move: {next_moves}")
-        while not self.check_move(next_moves):
+        legal_moves = self.check_move(next_moves)
+        while not legal_moves:
             print("illegal move")
             #next_move = self.find_route()
             if random.random() < 0.5:
-                next_moves = [self.pos]
+                legal_moves = [self.pos]
                 print("wait one time step")
                 break
             else:
                 # TODO: only one step or self.speed steps?
                 next_moves = self.random_move()
-                print(f"try random step(s): {next_moves}")
-        
+                legal_moves = self.check_move(next_moves)
+                print(f"try random step(s): {legal_moves}")
+        if len(legal_moves) != len(next_moves):
+            print(f"not all moves are legal, not using full speed, new pos: {legal_moves[-1]}")
+            next_moves = legal_moves
         for move in next_moves:
             self.model.grid.move_agent(self, move)
+        
         if self.pos == self.current_objective[1]:
             if self.reached_objective():
                 print("agent is removed")
@@ -75,7 +80,8 @@ class Person(Agent):
             self.model.grid.move_agent(self, move)
         if self.pos == self.current_objective[1]:
             self.reached_objective()
-        self.familiar = self.familiar + 0.01
+        if self.familiar < 1.0:
+            self.familiar = round(self.familiar + 0.01, 2)
         self.steps_instore += 1
         self.route.append(self.pos)
 
@@ -98,10 +104,13 @@ class Person(Agent):
             return False
 
     def check_move(self, moves):
+        legal = []
         for move in moves:
             if self.model.grid.out_of_bounds(move) or not self.model.grid.is_cell_empty(move):
-                return False
-        return True
+                return legal
+            else: 
+                legal.append(move)
+        return legal
 
     def find_route(self):
         # TODO: True is voor eigen positie meenemen, willen we dat?
