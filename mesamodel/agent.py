@@ -97,7 +97,7 @@ class Person(Agent):
             return True
 
         else:
-            print(f"{self} got {self.current_objective[0]}!\n\n")
+            print(f"{self} got {self.current_objective[0]}!\n")
             self.basket.append(self.current_objective[0])
             self.next_objective()
             print(f"getting next objective: {self.current_objective}")
@@ -124,7 +124,7 @@ class Person(Agent):
 
         # TODO: Better algorithm
         # Check if he gets closer and not in obstacles, otherwise go up
-        obstacles = [obstacle.pos for obstacle in self.model.obstacles]
+        # obstacles = [obstacle.pos for obstacle in self.model.obstacles]
         # for move in possible_moves:
         #     if np.abs(move[0] - self.current_objective[1][0]) < np.abs(self.pos[0] - self.current_objective[1][0]) and move not in obstacles:
         #         return move
@@ -133,6 +133,7 @@ class Person(Agent):
         if np.random.uniform(0,1) <= self.familiar: 
             moves = self.astar_move()
         else:
+            print(f"not familiar, random moves")
             moves = self.random_move()
         return moves
 
@@ -150,7 +151,10 @@ class Person(Agent):
 
     def random_move(self):
         x, y = self.pos
-        moves = [random.choice([(x+1, y), (x-1, y), (x, y+1), (x, y-1)]) for i in range(self.speed)]
+        moves = []
+        for i in range(self.speed):
+            moves.append(random.choice([(x+1, y), (x-1, y), (x, y+1), (x, y-1)]))
+            x, y = moves[-1]
         return moves
 
     def __repr__(self):

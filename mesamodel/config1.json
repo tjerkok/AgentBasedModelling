@@ -1,1 +1,1 @@
-{"height": 10, "width": 10, "n_persons": 10, "n_items": 1, "grid_layout": "grids/hard_10x10.txt", "avg_arrival": 10, "n_steps": 100, "speed_dist": [[1, 2], [0.5, 0.5]], "familiar_dist": [[1, 0.6], [0.75, 0.25]]}
+{"height": 11, "width": 11, "n_persons": 3, "n_items": 1, "grid_layout": "grids/subgrid_11x11.txt", "avg_arrival": 10, "n_steps": 100, "speed_dist": [[3, 2], [1.0, 0.0]], "familiar_dist": [[1, 0.6], [1.0, 0.0]], "grid_stepsize": 0.5}

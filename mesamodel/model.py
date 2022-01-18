@@ -22,6 +22,7 @@ class GroceryModel(Model):
         self.n_steps = config["n_steps"]
         self.speed_dist = config["speed_dist"]
         self.familiar_dist = config["familiar_dist"]
+        self.grid_stepsize = config["grid_stepsize"]
         self.obstacles = []
         self.objectives = {}
         self.persons = []
