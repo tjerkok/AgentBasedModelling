@@ -23,6 +23,7 @@ class GroceryModel(Model):
         self.speed_dist = config["speed_dist"]
         self.familiar_dist = config["familiar_dist"]
         self.grid_stepsize = config["grid_stepsize"]
+        self.list_subgrids = config["list_subgrids"]
         self.obstacles = []
         self.objectives = {}
         self.persons = []
@@ -46,7 +47,8 @@ class GroceryModel(Model):
             "person_locs": lambda m: [person.pos for person in self.persons],
             "steps_in_stores": lambda m: [person.steps_instore for person in self.persons],
             "speed": lambda m: [person.speed for person in self.persons],
-            "familiar": lambda m: [person.familiar for person in self.persons]
+            "familiar": lambda m: [person.familiar for person in self.persons],
+            "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids]
         })
 
         # placing obstacles, entry and exit
@@ -118,7 +120,6 @@ class GroceryModel(Model):
         Runs the model for n_steps
         """
         for i in range(self.n_steps):
-            print(f"{i} | arrival_times: {self.arrival_times}")
             if i in self.arrival_times:
                 print(f"arriving!")
                 self.add_person()
@@ -127,6 +128,25 @@ class GroceryModel(Model):
                 self.datacollector.collect(self)
                 return
     
+    def calculate_density(self, subgrid):
+        LO = subgrid[0] # Links onder
+        RO = subgrid[1] # Rechts onder
+        RB = subgrid[2] # Rechts boven
+        LB = subgrid[3] # Links boven
+        count_agents = 0
+        count_obstacles = 0
+        for x in range(LO[0], RO[0]+1):
+            for y in range(LB[1], LO[1]+1):
+                if (x, y) in [person.pos for person in self.persons]:
+                    count_agents += 1
+                if (x, y) in [obstacle.pos for obstacle in self.obstacles]:
+                    count_obstacles += 1
+        density = count_agents/((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles)
+        return density
+
+
+
+
 
 if __name__ == "__main__":
 
