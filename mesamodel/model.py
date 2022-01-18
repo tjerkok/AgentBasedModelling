@@ -150,7 +150,7 @@ class GroceryModel(Model):
                     count_agents += 1
                 if (x, y) in [obstacle.pos for obstacle in self.obstacles]:
                     count_obstacles += 1
-        density = count_agents/((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles)
+        density = count_agents/abs(((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles))
         return density
 
 

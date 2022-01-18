@@ -56,6 +56,8 @@ class Person(Agent):
             print("illegal move")
             #next_move = self.find_route()
             if random.random() < 0.5:
+                print(f"legal_moves: {legal_moves}")
+                print(f"pos: {self.pos}")
                 legal_moves = [self.pos]
                 print("wait one time step")
                 break
@@ -64,24 +66,24 @@ class Person(Agent):
                 next_moves = self.random_move()
                 legal_moves = self.check_move(next_moves)
                 print(f"try random step(s): {legal_moves}")
-        if len(legal_moves) != len(next_moves):
-            print(f"not all moves are legal, not using full speed, new pos: {legal_moves[-1]}")
-            next_moves = legal_moves
-        for move in next_moves:
-            self.model.grid.move_agent(self, move)
+        # for move in legal_moves:
+        #     if move != self.pos:
+        #         self.model.grid.move_agent(self, move)
         
+
+        # Make move
+        for move in next_moves:
+            if move != self.pos:
+                self.model.grid.move_agent(self, move)
+        if self.pos == self.current_objective[1]:
+            self.reached_objective()
+        if self.familiar < 1.0:
+            self.familiar = round(self.familiar + 0.01, 2)
         if self.pos == self.current_objective[1]:
             if self.reached_objective():
                 print("agent is removed")
                 return
 
-        # Make move
-        for move in next_moves:
-            self.model.grid.move_agent(self, move)
-        if self.pos == self.current_objective[1]:
-            self.reached_objective()
-        if self.familiar < 1.0:
-            self.familiar = round(self.familiar + 0.01, 2)
         self.steps_instore += 1
         self.route.append(self.pos)
 
