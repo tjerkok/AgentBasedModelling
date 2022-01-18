@@ -4,11 +4,12 @@ import random
 import networkx as nx
 
 class Person(Agent):
-    def __init__(self, unique_id, pos, model, objectives, moore=False, speed=1):
+    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1,):
         super().__init__(unique_id, model)
         
         self.pos = pos
         self.objectives = objectives
+        self.familiar = familiar
         print(f"Originally Person {self.unique_id} has objs {self.objectives}")
         self.objectives_inc_coord = []
         self.get_objectives_coord()
@@ -18,6 +19,7 @@ class Person(Agent):
         self.model = model
         self.speed = speed
         self.moore = moore
+
         self.basket = []
         self.route = []
         self.steps_instore = 0
@@ -50,6 +52,7 @@ class Person(Agent):
     def step(self):
         # Find next step
         self.steps_instore += 1
+        self.familiar = self.familiar + 0.01
         self.route.append(self.pos)
         next_move = self.find_route()
         print(f"planned move: {next_move}")
@@ -63,6 +66,7 @@ class Person(Agent):
             else:
                 next_move = self.random_move()
                 print("try random step")
+
         # Make move
         self.model.grid.move_agent(self, next_move)
         if self.pos == self.current_objective[1]:
@@ -84,7 +88,7 @@ class Person(Agent):
         # TODO: True is voor eigen positie meenemen, willen we dat?
         # possible_moves = self.model.grid.get_neighborhood(self.pos, self.moore, True, self.speed) 
         print(f"{self} has current obj {self.current_objective[0]} at {self.current_objective[1]}")
-
+        
         # implementing directed route with A*
         # # Check if at objective
         # if self.current_objective[1] in possible_moves:
@@ -97,10 +101,11 @@ class Person(Agent):
         #     if np.abs(move[0] - self.current_objective[1][0]) < np.abs(self.pos[0] - self.current_objective[1][0]) and move not in obstacles:
         #         return move
 
-        # Uncomment according to chosen move
-        move = self.astar_move()
-        #move = self.random.choice([self.astar_move(),self.astar_move(),self.random_move()])
-        #move = self.random_move()
+        # If the agent is familiar, it will make a A* move, if it isnt it will take a random step
+        if np.random.uniform(0,1) <= self.familiar: 
+            move = self.astar_move()
+        else:
+            move = self.random_move()
         return move
 
 

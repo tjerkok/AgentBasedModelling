@@ -88,7 +88,7 @@ class GroceryModel(Model):
 
     def add_person(self):
         # specify speed? Moore? pos?
-        person = Person(self.next_id(), self.entry_pos, self, objectives=["bread", "chicken", "drinks", "exit"])
+        person = Person(self.next_id(), self.entry_pos, self, objectives=["bread", "chicken", "drinks", "exit"],familiar=0.5)
         if self.grid.is_cell_empty(self.entry_pos):
             self.grid.place_agent(person, self.entry_pos)
             self.persons.append(person)
