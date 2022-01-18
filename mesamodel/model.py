@@ -48,7 +48,7 @@ class GroceryModel(Model):
 
         # datacollector requirements
         self.running = True
-        self.datacollector.collect(self)
+        # self.datacollector.collect(self) # doing first collection in step()
 
     def read_grid(self):
         """
@@ -100,8 +100,9 @@ class GroceryModel(Model):
         """
         Calls step method for each person
         """
-        self.schedule.step()
         self.datacollector.collect(self)
+        self.schedule.step()
+        # self.datacollector.collect(self)
 
     def run_model(self, n_steps=100):
         """
@@ -114,6 +115,7 @@ class GroceryModel(Model):
                 self.add_person()
             self.step()
             if self.schedule.get_agent_count() == 0 and i > self.arrival_times[-1]:
+                self.datacollector.collect(self)
                 return
     
 
