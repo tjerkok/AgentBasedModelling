@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from tkinter.font import families
 from mesa import Model
 from mesa.datacollection import DataCollector
@@ -6,6 +7,7 @@ from mesa.time import RandomActivation
 import networkx as nx
 import json
 import random
+import regex as re
 
 from agent import Person, Obstacle
 
@@ -23,12 +25,13 @@ class GroceryModel(Model):
         self.speed_dist = config["speed_dist"]
         self.familiar_dist = config["familiar_dist"]
         self.grid_stepsize = config["grid_stepsize"]
+        self.n_objectives = config["n_objectives"]
         self.obstacles = []
         self.objectives = {}
         self.persons = []
         self.arrival_times = [0]
-        self.entry_pos = (0,0)
-        self.exit_pos = (0,0)
+        self.entry_pos = []
+        self.exit_pos = []
         self.graph = nx.grid_2d_graph(self.height, self.width)
 
         # scheduling Poisson distribution times of persons arriving
@@ -60,6 +63,10 @@ class GroceryModel(Model):
         """
         Create grid from grid_layout.txt
         """
+        gridsize = re.search(r"_\d+x\d+", self.grid_layout)[0]
+        if int(gridsize[1:3]) != self.height or int(gridsize[1:3]) != self.width:
+            print("width and height are not the same as layout.txt suggests!")
+            raise ValueError
         objective_positions = []
         with open(self.grid_layout, 'r') as f:
             lines = f.readlines()
@@ -69,9 +76,9 @@ class GroceryModel(Model):
                 pos = (int(line[1]), int(line[2]))
                 
                 if obs_type == "entry":
-                    self.entry_pos = pos
+                    self.entry_pos.append(pos)
                 elif obs_type == "exit":
-                    self.exit_pos = pos
+                    self.exit_pos.append(pos)
 
                 if obs_type == "wall":
                     obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=obs_type)
@@ -94,12 +101,14 @@ class GroceryModel(Model):
 
     def add_person(self):
         # specify speed? Moore? pos?
+        objectives = random.choices(list(self.objectives.keys()), k=self.n_objectives)+ ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
+        entry_pos = random.choice(self.entry_pos)
         print(f"chose speed: {speed} and familiar: {familiar}")
-        person = Person(self.next_id(), self.entry_pos, self, objectives=["bread", "chicken", "drinks", "exit"], familiar=familiar, speed=speed)
-        if self.grid.is_cell_empty(self.entry_pos):
-            self.grid.place_agent(person, self.entry_pos)
+        person = Person(self.next_id(), entry_pos, self, objectives=objectives, familiar=familiar, speed=speed)
+        if self.grid.is_cell_empty(entry_pos):
+            self.grid.place_agent(person, entry_pos)
             self.persons.append(person)
             self.schedule.add(person)
         else:
