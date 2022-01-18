@@ -4,7 +4,7 @@ import random
 import networkx as nx
 
 class Person(Agent):
-    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1,):
+    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1):
         super().__init__(unique_id, model)
         
         self.pos = pos
@@ -19,9 +19,8 @@ class Person(Agent):
         self.model = model
         self.speed = speed
         self.moore = moore
-
         self.basket = []
-        self.route = []
+        self.route = [self.pos]
         self.steps_instore = 0
 
 
@@ -43,7 +42,6 @@ class Person(Agent):
         self.new_objectives.append(('exit', self.model.objectives['exit'][0]))  # [0] because of [(1,9)], list being returned
 
 
-
     def next_objective(self):
         #next_objective = self.objectives.pop(0)
         #self.current_objective = (next_objective, random.choice(self.model.objectives[next_objective]))
@@ -51,38 +49,59 @@ class Person(Agent):
 
     def step(self):
         # Find next step
-        self.steps_instore += 1
-        self.familiar = self.familiar + 0.01
-        self.route.append(self.pos)
-        next_move = self.find_route()
-        print(f"planned move: {next_move}")
-        while self.model.grid.out_of_bounds(next_move) or not self.model.grid.is_cell_empty(next_move):
+        next_moves = self.find_route()
+        print(f"planned move: {next_moves}")
+        while not self.check_move(next_moves):
             print("illegal move")
             #next_move = self.find_route()
             if random.random() < 0.5:
-                next_move = self.pos
-                print("illegal move planned, wait one time step")
+                next_moves = [self.pos]
+                print("wait one time step")
                 break
             else:
-                next_move = self.random_move()
-                print("try random step")
+                # TODO: only one step or self.speed steps?
+                next_moves = self.random_move()
+                print(f"try random step(s): {next_moves}")
+        
+        for move in next_moves:
+            self.model.grid.move_agent(self, move)
+        if self.pos == self.current_objective[1]:
+            if self.reached_objective():
+                print("agent is removed")
+                return
 
         # Make move
-        self.model.grid.move_agent(self, next_move)
+        for move in next_moves:
+            self.model.grid.move_agent(self, move)
         if self.pos == self.current_objective[1]:
             self.reached_objective()
-            
+        self.familiar = self.familiar + 0.01
+        self.steps_instore += 1
+        self.route.append(self.pos)
+
     
     def reached_objective(self):
+        """
+        Returns True if agent is at exit, else False
+        """
         if self.current_objective[0] == "exit":
             print(f"{self} is done shopping, removing...")
-            self.model.grid.remove_agent(self)
             self.model.schedule.remove(self)
+            self.model.grid.remove_agent(self)
+            return True
+
         else:
             print(f"{self} got {self.current_objective[0]}!\n\n")
             self.basket.append(self.current_objective[0])
             self.next_objective()
             print(f"getting next objective: {self.current_objective}")
+            return False
+
+    def check_move(self, moves):
+        for move in moves:
+            if self.model.grid.out_of_bounds(move) or not self.model.grid.is_cell_empty(move):
+                return False
+        return True
 
     def find_route(self):
         # TODO: True is voor eigen positie meenemen, willen we dat?
@@ -103,10 +122,10 @@ class Person(Agent):
 
         # If the agent is familiar, it will make a A* move, if it isnt it will take a random step
         if np.random.uniform(0,1) <= self.familiar: 
-            move = self.astar_move()
+            moves = self.astar_move()
         else:
-            move = self.random_move()
-        return move
+            moves = self.random_move()
+        return moves
 
 
     def dist(self, a, b):
@@ -117,13 +136,13 @@ class Person(Agent):
 
     def astar_move(self):
         route = nx.astar_path(self.model.graph, self.pos, self.current_objective[1], heuristic=self.dist)
-        return route[1]
+        return route[1:self.speed+1]
 
 
     def random_move(self):
         x, y = self.pos
-        move = random.choice([(x+1, y), (x-1, y), (x, y+1), (x, y-1)])
-        return move
+        moves = [random.choice([(x+1, y), (x-1, y), (x, y+1), (x, y-1)]) for i in range(self.speed)]
+        return moves
 
     def __repr__(self):
         return f"Person {self.unique_id} at {self.pos}"

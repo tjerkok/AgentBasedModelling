@@ -1,3 +1,4 @@
+from tkinter.font import families
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.space import SingleGrid
@@ -19,6 +20,8 @@ class GroceryModel(Model):
         self.grid_layout = config["grid_layout"]
         self.avg_arrival = config["avg_arrival"]
         self.n_steps = config["n_steps"]
+        self.speed_dist = config["speed_dist"]
+        self.familiar_dist = config["familiar_dist"]
         self.obstacles = []
         self.objectives = {}
         self.persons = []
@@ -88,7 +91,10 @@ class GroceryModel(Model):
 
     def add_person(self):
         # specify speed? Moore? pos?
-        person = Person(self.next_id(), self.entry_pos, self, objectives=["bread", "chicken", "drinks", "exit"],familiar=0.5)
+        speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
+        familiar = random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0]
+        print(f"chose speed: {speed} and familiar: {familiar}")
+        person = Person(self.next_id(), self.entry_pos, self, objectives=["bread", "chicken", "drinks", "exit"], familiar=familiar, speed=speed)
         if self.grid.is_cell_empty(self.entry_pos):
             self.grid.place_agent(person, self.entry_pos)
             self.persons.append(person)
