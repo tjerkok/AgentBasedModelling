@@ -18,7 +18,6 @@ class GroceryServer:
         (x, y) = agent.pos
         portrayal["x"] = x
         portrayal["y"] = y
-        print(agent)
         if isinstance(agent, Person):
             portrayal["Color"] = "#999999"
         elif isinstance(agent, Obstacle):

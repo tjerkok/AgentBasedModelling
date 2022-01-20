@@ -7,10 +7,11 @@ from mesa.time import RandomActivation
 import networkx as nx
 import json
 import random
-from numpy import isin
+import numpy as np
+from pkg_resources import EntryPoint
 import regex as re
 
-from agent import Person, Obstacle
+from agent import Person, Obstacle, Objective
 
 class GroceryModel(Model):
     def __init__(self, config):
@@ -46,7 +47,7 @@ class GroceryModel(Model):
         self.schedule = RandomActivation(self)
 
         # grid and datacollection
-        self.grid = SingleGrid(self.width, self.height, torus=False)
+        self.grid = MultiGrid(self.width, self.height, torus=False)
         self.datacollector = DataCollector({ #TODO
             "persons": lambda m: [agent for agent in self.schedule.agents if isinstance(agent, Person)], # self.schedule.get_agent_count(),
             "person_locs": lambda m: [person.pos for person in self.persons],
@@ -76,16 +77,16 @@ class GroceryModel(Model):
             lines = f.readlines()
             for line in lines[1:]:
                 line = line.strip("\n").split(",")
-                obs_type = line[0]
+                type = line[0]
                 pos = (int(line[1]), int(line[2]))
                 
-                if obs_type == "entry":
+                if type == "entry":
                     self.entry_pos.append(pos)
-                elif obs_type == "exit":
+                elif type == "exit":
                     self.exit_pos.append(pos)
 
-                if obs_type == "wall":
-                    obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=obs_type)
+                if type == "wall":
+                    obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=type)
                     self.obstacles.append(obstacle)
                     self.grid.place_agent(obstacle, pos)
                     self.schedule.add(obstacle)
@@ -97,22 +98,30 @@ class GroceryModel(Model):
                     #         self.graph.remove_edge(n, pos)
                     
                     # TODO: Niet "objective" maar het soort objective?
+                    objective = Objective(self.next_id(), pos, self, objective_type=type)
+                    self.grid.place_agent(objective, pos)
+                    self.schedule.add(objective)
                     self.graph.nodes[pos]["type"] = "objective"
-                    if obs_type not in self.objectives.keys():
-                        self.objectives[obs_type] = []
-                    self.objectives[obs_type].append(pos)
+                    if type not in self.objectives.keys():
+                        self.objectives[type] = []
+                    self.objectives[type].append(pos)
                     objective_positions.append(pos)
 
 
     def add_person(self):
         # specify speed? Moore? pos?
-        objectives = random.choices(list(self.objectives.keys()), k=self.n_objectives)+ ["exit"]
+        obs_to_choose = list(self.objectives.keys())
+        if "exit" in obs_to_choose:
+            obs_to_choose.remove("exit")
+        if "entry" in obs_to_choose:
+            obs_to_choose.remove("entry")
+        objectives = random.choices((obs_to_choose), k=self.n_objectives)+ ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
         entry_pos = random.choice(self.entry_pos)
-        print(f"chose speed: {speed} and familiar: {familiar}")
+        print(f"arriving! chose speed: {speed} and familiar: {familiar}")
         person = Person(self.next_id(), entry_pos, self, objectives=objectives, familiar=familiar, speed=speed)
-        if self.grid.is_cell_empty(entry_pos):
+        if not any([isinstance(agent, Person) for agent in self.grid.get_cell_list_contents(entry_pos)]):# self.grid.is_cell_empty(entry_pos):
             self.grid.place_agent(person, entry_pos)
             self.persons.append(person)
             self.schedule.add(person)
@@ -123,13 +132,10 @@ class GroceryModel(Model):
         """
         Calls step method for each person
         """
-
-        if self.current_step in self.arrival_times:
-            print(f"arriving!")
-            self.add_person()
-
         self.datacollector.collect(self)
         self.schedule.step()
+        if self.current_step in self.arrival_times:
+            self.add_person()
         self.current_step += 1
 
     def run_model(self, n_steps=100):
@@ -140,7 +146,7 @@ class GroceryModel(Model):
             # if i in self.arrival_times:
             #     self.add_person()
             self.step()
-            if not isinstance(self.schedule.agents, Person) and i > self.arrival_times[-1]:
+            if not any([isinstance(agent, Person) for agent in self.schedule.agents]) and i > self.arrival_times[-1]:
                 self.datacollector.collect(self)
                 return
     
@@ -160,7 +166,46 @@ class GroceryModel(Model):
         density = count_agents/abs(((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles))
         return density
 
+    # def calculate_density(self, n_subgrids=None):
+    #     # LO = subgrid[0] # Links onder
+    #     # RO = subgrid[1] # Rechts onder
+    #     # RB = subgrid[2] # Rechts boven
+    #     # LB = subgrid[3] # Links boven
+    #     dx = np.sqrt(self.width)
+    #     dy = np.sqrt(self.height)
 
+    #     x_subs = np.arange(0, self.width, dx)
+    #     y_subs = np.arange(0, self.height, dy)
+    #     print(x_subs)
+    #     print(y_subs)
+    #     density = 0
+        # person_locs = [person.pos for person in self.persons]
+        # obstacle_pos = [obstacle.pos for obstacle in self.obstacles]
+        # for i, xi in enumerate(x_subs):
+        #     for j, yj in enumerate(y_subs):
+        #         for x in range(x_subs[i], x_subs[i+1]):
+        #             for y in range(y_subs[j], y_subs[j+1]):
+
+                
+        # exit()
+        # # count_agents = 0
+        # count_obstacles = 0
+        # for x in range(LO[0], RO[0]+1):
+        #     for y in range(LB[1], LO[1]+1):
+        #         if (x, y) in [person.pos for person in self.persons]:
+        #             count_agents += 1
+        #         if (x, y) in [obstacle.pos for obstacle in self.obstacles]:
+        #             count_obstacles += 1
+        # density = count_agents/abs(((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles))
+        # return density
+
+    # def count_agents_subgrid(person_pos, obstacle_pos, x1, x2, y1, y2):
+    #     person_count = 0
+    #     obstacle_count = 0
+    #     for x in range(x1, x2):
+    #         for y in range(y1, y2):
+    #             if (x, y) in person_pos:
+    #                 pass
 
 
 

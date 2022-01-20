@@ -49,6 +49,7 @@ class Person(Agent):
 
     def step(self):
         # Find next step
+        print(f"turn for {self} at {self.pos}")
         next_moves = self.find_route()
         print(f"planned move: {next_moves}")
         legal_moves = self.check_move(next_moves)
@@ -101,7 +102,9 @@ class Person(Agent):
     def check_move(self, moves):
         legal = []
         for move in moves:
-            if self.model.grid.out_of_bounds(move) or not self.model.grid.is_cell_empty(move):
+            if self.model.grid.out_of_bounds(move) or any(
+                [isinstance(agent, (Person, Obstacle)) for agent in self.model.grid.get_cell_list_contents(move)]
+            ): 
                 return legal
             else: 
                 legal.append(move)
@@ -110,8 +113,7 @@ class Person(Agent):
     def find_route(self):
         # TODO: True is voor eigen positie meenemen, willen we dat?
         # possible_moves = self.model.grid.get_neighborhood(self.pos, self.moore, True, self.speed) 
-        print(f"{self} has current obj {self.current_objective[0]} at {self.current_objective[1]}")
-        
+        # print(f"{self} at {self.pos} has current obj {self.current_objective[0]} at {self.current_objective[1]}")
         # implementing directed route with A*
         # # Check if at objective
         # if self.current_objective[1] in possible_moves:
@@ -163,7 +165,20 @@ class Obstacle(Agent):
         self.pos = pos
         
     def __repr__(self):
-        return f"{self.obstacle_type} {self.unique_id} at {self.pos}"
+        return f"Obstacle {self.obstacle_type} {self.unique_id} at {self.pos}"
+
+    def step(self):
+        pass
+
+
+class Objective(Agent):
+    def __init__(self, next_id, model, pos, objective_type):
+        super().__init__(next_id, model)
+        self.objective_type = objective_type
+        self.pos = pos
+        
+    def __repr__(self):
+        return f"{self.objective_type} {self.unique_id} at {self.pos}"
 
     def step(self):
         pass
