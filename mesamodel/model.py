@@ -7,6 +7,7 @@ from mesa.time import RandomActivation
 import networkx as nx
 import json
 import random
+from numpy import isin
 import regex as re
 
 from agent import Person, Obstacle
@@ -47,7 +48,7 @@ class GroceryModel(Model):
         # grid and datacollection
         self.grid = SingleGrid(self.width, self.height, torus=False)
         self.datacollector = DataCollector({ #TODO
-            "persons": lambda m: self.schedule.get_agent_count(),
+            "persons": lambda m: [agent for agent in self.schedule.agents if isinstance(agent, Person)], # self.schedule.get_agent_count(),
             "person_locs": lambda m: [person.pos for person in self.persons],
             "steps_in_stores": lambda m: [person.steps_instore for person in self.persons],
             "speed": lambda m: [person.speed for person in self.persons],
@@ -123,14 +124,13 @@ class GroceryModel(Model):
         Calls step method for each person
         """
 
-        self.current_step += 1
         if self.current_step in self.arrival_times:
             print(f"arriving!")
             self.add_person()
 
         self.datacollector.collect(self)
         self.schedule.step()
-        # self.datacollector.collect(self)
+        self.current_step += 1
 
     def run_model(self, n_steps=100):
         """
@@ -140,7 +140,7 @@ class GroceryModel(Model):
             # if i in self.arrival_times:
             #     self.add_person()
             self.step()
-            if self.schedule.get_agent_count() == 0 and i > self.arrival_times[-1]:
+            if not isinstance(self.schedule.agents, Person) and i > self.arrival_times[-1]:
                 self.datacollector.collect(self)
                 return
     

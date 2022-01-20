@@ -52,31 +52,24 @@ class Person(Agent):
         next_moves = self.find_route()
         print(f"planned move: {next_moves}")
         legal_moves = self.check_move(next_moves)
-        while not legal_moves:
+        if not legal_moves:
             print("illegal move")
-            #next_move = self.find_route()
             if random.random() < 0.5:
-                print(f"legal_moves: {legal_moves}")
-                print(f"pos: {self.pos}")
-                legal_moves = [self.pos]
-                print("wait one time step")
-                break
-            else:
-                # TODO: only one step or self.speed steps?
                 next_moves = self.random_move()
                 legal_moves = self.check_move(next_moves)
-                print(f"try random step(s): {legal_moves}")
-        # for move in legal_moves:
-        #     if move != self.pos:
-        #         self.model.grid.move_agent(self, move)
-        
+                if legal_moves:
+                    legal_moves = [legal_moves[0]]
+                print(f"doing none one random move: {legal_moves}")
+            else:
+                legal_moves = []
+                print("waiting one time step")
 
         # Make move
-        for move in next_moves:
+        for move in legal_moves:
             if move != self.pos:
                 self.model.grid.move_agent(self, move)
-        if self.pos == self.current_objective[1]:
-            self.reached_objective()
+        # if self.pos == self.current_objective[1]:
+        #     self.reached_objective()
         if self.familiar < 1.0:
             self.familiar = round(self.familiar + 0.01, 2)
         if self.pos == self.current_objective[1]:
@@ -159,8 +152,8 @@ class Person(Agent):
             x, y = moves[-1]
         return moves
 
-    def __repr__(self):
-        return f"Person {self.unique_id} at {self.pos}"
+    def __str__(self):
+        return f"Person {self.unique_id}" # at {self.pos}"
     
 
 class Obstacle(Agent):
