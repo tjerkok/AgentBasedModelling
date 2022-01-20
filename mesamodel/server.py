@@ -4,7 +4,6 @@ from mesa.visualization.UserParam import UserSettableParameter
 
 from model import GroceryModel
 from agent import Person, Obstacle
-# from .utils import read_json, read_yaml
 
 # voorbeeld: https://github.com/projectmesa/mesa/blob/main/examples/forest_fire/forest_fire/server.py
 
@@ -15,21 +14,18 @@ class GroceryServer:
         self.config = {"config":config}
 
     def _agent_portrayal(self, agent):
+        portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
+        (x, y) = agent.pos
+        portrayal["x"] = x
+        portrayal["y"] = y
+        print(agent)
         if isinstance(agent, Person):
-            portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
-            (x, y) = agent.pos
-            portrayal["x"] = x
-            portrayal["y"] = y
-            portrayal["Color"] = "#000000"
-            return portrayal
+            portrayal["Color"] = "#999999"
         elif isinstance(agent, Obstacle):
-            portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
-            (x, y) = agent.pos
-            portrayal["x"] = x
-            portrayal["y"] = y
             portrayal["Color"] = "#000000"
         else:
-            return
+            portrayal["Color"] = "#ffe066"
+        return portrayal
 
     def launch(self):
 
