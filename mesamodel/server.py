@@ -4,8 +4,6 @@ from mesa.visualization.UserParam import UserSettableParameter
 
 from model import GroceryModel
 from agent import Person, Obstacle
-from .model import GroceryModel
-from .agent import Person, Obstacle
 # from .utils import read_json, read_yaml
 
 # voorbeeld: https://github.com/projectmesa/mesa/blob/main/examples/forest_fire/forest_fire/server.py
