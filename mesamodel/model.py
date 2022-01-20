@@ -2,14 +2,14 @@ from multiprocessing.sharedctypes import Value
 from tkinter.font import families
 from mesa import Model
 from mesa.datacollection import DataCollector
-from mesa.space import SingleGrid, MultiGrid # TODO: do we need multi?
+from mesa.space import SingleGrid
 from mesa.time import RandomActivation
 import networkx as nx
 import json
 import random
 import regex as re
 
-from .agent import Person, Obstacle
+from agent import Person, Obstacle
 
 class GroceryModel(Model):
     def __init__(self, config):
@@ -31,7 +31,6 @@ class GroceryModel(Model):
         self.objectives = {}
         self.persons = []
         self.arrival_times = [0]
-        self.current_step = 0
         self.entry_pos = []
         self.exit_pos = []
         self.graph = nx.grid_2d_graph(self.height, self.width)
@@ -87,7 +86,6 @@ class GroceryModel(Model):
                     obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=obs_type)
                     self.obstacles.append(obstacle)
                     self.grid.place_agent(obstacle, pos)
-                    self.schedule.add(obstacle)
                     for n in list(self.graph.neighbors(pos)):
                         self.graph.remove_edge(pos, n)
                 else:
@@ -122,12 +120,6 @@ class GroceryModel(Model):
         """
         Calls step method for each person
         """
-
-        self.current_step += 1
-        if self.current_step in self.arrival_times:
-            print(f"arriving!")
-            self.add_person()
-
         self.datacollector.collect(self)
         self.schedule.step()
         # self.datacollector.collect(self)
@@ -137,8 +129,9 @@ class GroceryModel(Model):
         Runs the model for n_steps
         """
         for i in range(self.n_steps):
-            # if i in self.arrival_times:
-            #     self.add_person()
+            if i in self.arrival_times:
+                print(f"arriving!")
+                self.add_person()
             self.step()
             if self.schedule.get_agent_count() == 0 and i > self.arrival_times[-1]:
                 self.datacollector.collect(self)
