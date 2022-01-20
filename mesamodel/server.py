@@ -1,42 +1,47 @@
-from mesa.visualization.modules import CanvasGrid, ChartModule, PieChartModule
+from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
 
 from .model import GroceryModel
-from .utils import read_json, read_yaml
+from .agent import Person, Obstacle
+# from .utils import read_json, read_yaml
 
 # voorbeeld: https://github.com/projectmesa/mesa/blob/main/examples/forest_fire/forest_fire/server.py
 
-COLORS = {False: "#000000", True: "#880000"}
-CONFIG = read_yaml('config/config.yml')
+class GroceryServer:
 
-def person_portrayal(agent):
-    if agent is None:
-        return
-    portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
-    (x, y) = agent.pos
-    portrayal["x"] = x
-    portrayal["y"] = y
-    portrayal["Color"] = COLORS[agent.infected]
-    return portrayal
+    def __init__(self, config):
 
-canvas_element = CanvasGrid(person_portrayal, 100, 100, 500, 500)
-tree_chart = ChartModule(
-    [{"Label": label, "Color": color} for (label, color) in COLORS.items()]
-)
-pie_chart = PieChartModule(
-    [{"Label": label, "Color": color} for (label, color) in COLORS.items()]
-)
+        self.config = {"config":config}
 
-model_params = {
-    "height": CONFIG["grid"]["height"],
-    "width": CONFIG["grid"]["width"],
-    # "density": UserSettableParameter("slider", "Tree density", 0.65, 0.01, 1.0, 0.01),
-}
+    def _agent_portrayal(self, agent):
+        if isinstance(agent, Person):
+            portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
+            (x, y) = agent.pos
+            portrayal["x"] = x
+            portrayal["y"] = y
+            portrayal["Color"] = "#000000"
+            return portrayal
+        elif isinstance(agent, Obstacle):
+            portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
+            (x, y) = agent.pos
+            portrayal["x"] = x
+            portrayal["y"] = y
+            portrayal["Color"] = "#000000"
+        else:
+            return
 
-server = ModularServer(
-    GroceryModel, [canvas_element, tree_chart, pie_chart], "Our Model", model_params
-)
+    def launch(self):
+
+        canvas_element = CanvasGrid(self._agent_portrayal,
+                                    self.config["config"]["height"],
+                                    self.config["config"]["width"],
+                                    500, 500)
+
+        server = ModularServer(
+            GroceryModel, [canvas_element], "Grocery Model", self.config
+        )
+        server.launch()
 
 
 
