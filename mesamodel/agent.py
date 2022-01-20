@@ -171,3 +171,6 @@ class Obstacle(Agent):
         
     def __repr__(self):
         return f"{self.obstacle_type} {self.unique_id} at {self.pos}"
+
+    def step(self):
+        pass
