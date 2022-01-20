@@ -4,7 +4,7 @@ import random
 import networkx as nx
 
 class Person(Agent):
-    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1):
+    def __init__(self, unique_id, pos, model, objectives,familiar, cong, moore=False, speed=1):
         super().__init__(unique_id, model)
         
         self.pos = pos
@@ -22,6 +22,7 @@ class Person(Agent):
         self.basket = []
         self.route = [self.pos]
         self.steps_instore = 0
+        self.cong = 0
 
 
     def get_objectives_coord(self):
@@ -112,6 +113,8 @@ class Person(Agent):
                 return legal
             else: 
                 legal.append(move)
+            if (any([isinstance(agent,Person) for agent in self.model.grid.get_cell_list_contents(move)])) == True:
+                self.cong =+ 1 
         return legal
 
     def find_route(self):
