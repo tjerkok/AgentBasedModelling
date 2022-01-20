@@ -1,4 +1,4 @@
-from mesa.visualization.modules import CanvasGrid
+from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
 
@@ -14,17 +14,21 @@ class GroceryServer:
         self.config = {"config":config}
 
     def _agent_portrayal(self, agent):
-        portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0}
+        portrayal = {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Layer": 0, "text_color": "White"}
         (x, y) = agent.pos
         portrayal["x"] = x
         portrayal["y"] = y
         if isinstance(agent, Person):
             portrayal["Color"] = "#999999"
+            portrayal["text"] = agent.unique_id
         elif isinstance(agent, Obstacle):
             portrayal["Color"] = "#000000"
         else:
             portrayal["Color"] = "#ffe066"
+            portrayal["text"] = agent.objective_type
+            portrayal["text_color"] = "Black"
         return portrayal
+
 
     def launch(self):
 
@@ -33,8 +37,18 @@ class GroceryServer:
                                     self.config["config"]["width"],
                                     500, 500)
 
+
+        chart1 = ChartModule([{"Label": "n_persons",
+                      "Color": "green"},
+                      {"Label": "n_done",
+                      "Color": "red"}],
+                    data_collector_name='datacollector')
+        chart2 = ChartModule([{"Label": "standing_still",
+                      "Color": "green"}],
+                    data_collector_name='datacollector')
+
         server = ModularServer(
-            GroceryModel, [canvas_element], "Grocery Model", self.config
+            GroceryModel, [canvas_element, chart1, chart2], "Grocery Model", self.config
         )
         server.launch()
 

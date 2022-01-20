@@ -32,10 +32,12 @@ class GroceryModel(Model):
         self.obstacles = []
         self.objectives = {}
         self.persons = []
+        self.n_done = 0
         self.arrival_times = [0]
         self.current_step = 0
         self.entry_pos = []
         self.exit_pos = []
+        self.standing_still = 0
         self.graph = nx.grid_2d_graph(self.height, self.width)
 
         # scheduling Poisson distribution times of persons arriving
@@ -49,6 +51,9 @@ class GroceryModel(Model):
         # grid and datacollection
         self.grid = MultiGrid(self.width, self.height, torus=False)
         self.datacollector = DataCollector({ #TODO
+            "standing_still": lambda m: self.standing_still,
+            "n_persons": lambda m: len([agent for agent in self.schedule.agents if isinstance(agent, Person)]),
+            "n_done": lambda m: self.n_done,
             "persons": lambda m: [agent for agent in self.schedule.agents if isinstance(agent, Person)], # self.schedule.get_agent_count(),
             "person_locs": lambda m: [person.pos for person in self.persons],
             "steps_in_stores": lambda m: [person.steps_instore for person in self.persons],
@@ -133,6 +138,7 @@ class GroceryModel(Model):
         Calls step method for each person
         """
         self.datacollector.collect(self)
+        self.standing_still = 0
         self.schedule.step()
         if self.current_step in self.arrival_times:
             self.add_person()
@@ -146,6 +152,7 @@ class GroceryModel(Model):
             # if i in self.arrival_times:
             #     self.add_person()
             self.step()
+
             if not any([isinstance(agent, Person) for agent in self.schedule.agents]) and i > self.arrival_times[-1]:
                 self.datacollector.collect(self)
                 return

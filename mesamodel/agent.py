@@ -65,7 +65,10 @@ class Person(Agent):
                 legal_moves = []
                 print("waiting one time step")
 
+
         # Make move
+        if not legal_moves:
+            self.model.standing_still += 1
         for move in legal_moves:
             if move != self.pos:
                 self.model.grid.move_agent(self, move)
@@ -90,6 +93,7 @@ class Person(Agent):
             print(f"{self} is done shopping, removing...")
             self.model.schedule.remove(self)
             self.model.grid.remove_agent(self)
+            self.model.n_done += 1
             return True
 
         else:
