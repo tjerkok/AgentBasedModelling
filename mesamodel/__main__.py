@@ -1,7 +1,7 @@
 import os
 
-from .server import GroceryServer
-from .utils import read_json
+from server import GroceryServer
+from utils import read_json
 
 PARENT_PATH = os.getcwd()+"/mesamodel/"
 

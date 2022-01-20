@@ -9,7 +9,7 @@ import json
 import random
 import regex as re
 
-from .agent import Person, Obstacle
+from agent import Person, Obstacle
 
 class GroceryModel(Model):
     def __init__(self, config):
