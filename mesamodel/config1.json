@@ -1,9 +1,9 @@
 {
-    "height": 16, 
-    "width": 16, 
+    "height": 100, 
+    "width": 100, 
     "n_persons": 100, 
     "n_items": 1, 
-    "grid_layout": "grids/vertical_16x16_shortcuts.txt", 
+    "grid_layout": "grids/simple_100x100.txt", 
     "avg_arrival": 5, 
     "n_steps": 1000, 
     "speed_dist": [[3, 2], [1.0, 0.0]], 

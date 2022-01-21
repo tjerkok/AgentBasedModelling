@@ -6,7 +6,7 @@ import networkx as nx
 class Person(Agent):
     def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1):
         super().__init__(unique_id, model)
-        
+        self.person_id = len(self.model.persons) + 1
         self.pos = pos
         self.objectives = objectives
         self.familiar = familiar
@@ -183,7 +183,7 @@ class Person(Agent):
         return moves
 
     def __repr__(self):
-        return f"Person {self.unique_id}" # at {self.pos}"
+        return f"Person {self.person_id}" # at {self.pos}"
     
 
 class Obstacle(Agent):

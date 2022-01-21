@@ -20,7 +20,7 @@ class GroceryServer:
         portrayal["y"] = y
         if isinstance(agent, Person):
             portrayal["Color"] = "#999999"
-            portrayal["text"] = agent.unique_id
+            portrayal["text"] = agent.person_id
         elif isinstance(agent, Obstacle):
             portrayal["Color"] = "#000000"
         else:
