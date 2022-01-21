@@ -4,7 +4,7 @@ import random
 import networkx as nx
 
 class Person(Agent):
-    def __init__(self, unique_id, pos, model, objectives,familiar, cong, moore=False, speed=1):
+    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1):
         super().__init__(unique_id, model)
         
         self.pos = pos

@@ -83,35 +83,35 @@ class GroceryModel(Model):
             for line in lines[1:]:
                 line = line.strip("\n").split(",")
                 type = line[0]
-                pos = (int(line[1]), int(line[2]))
-                
-                if type == "entry":
-                    self.entry_pos.append(pos)
-                elif type == "exit":
-                    self.exit_pos.append(pos)
+                startpos = (int(line[1]), int(line[2]))
+                orientation = line[3]
+                length = int(line[4])
+                for i in range(length):
+                    if orientation == "h":
+                        pos = (startpos[0]+i, startpos[1])
+                    elif orientation == "v":
+                        pos = (startpos[0], startpos[1]+i)
+                    if type == "entry":
+                        self.entry_pos.append(pos)
+                    elif type == "exit":
+                        self.exit_pos.append(pos)
 
-                if type == "wall":
-                    obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=type)
-                    self.obstacles.append(obstacle)
-                    self.grid.place_agent(obstacle, pos)
-                    self.schedule.add(obstacle)
-                    for n in list(self.graph.neighbors(pos)):
-                        self.graph.remove_edge(pos, n)
-                else:
-                    # for n in list(self.graph.neighbors(pos)):
-                    #     if n in objective_positions:
-                    #         self.graph.remove_edge(n, pos)
-                    
-                    # TODO: Niet "objective" maar het soort objective?
-                    objective = Objective(self.next_id(), pos, self, objective_type=type)
-                    self.grid.place_agent(objective, pos)
-                    self.schedule.add(objective)
-                    self.graph.nodes[pos]["type"] = "objective"
-                    if type not in self.objectives.keys():
-                        self.objectives[type] = []
-                    self.objectives[type].append(pos)
-                    objective_positions.append(pos)
-
+                    if type == "wall":
+                        obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=type)
+                        self.obstacles.append(obstacle)
+                        self.grid.place_agent(obstacle, pos)
+                        self.schedule.add(obstacle)
+                        for n in list(self.graph.neighbors(pos)):
+                            self.graph.remove_edge(pos, n)
+                    else:
+                        objective = Objective(self.next_id(), pos, self, objective_type=type)
+                        self.grid.place_agent(objective, pos)
+                        self.schedule.add(objective)
+                        self.graph.nodes[pos]["type"] = "objective"
+                        if type not in self.objectives.keys():
+                            self.objectives[type] = []
+                        self.objectives[type].append(pos)
+                        objective_positions.append(pos)
 
     def add_person(self):
         # specify speed? Moore? pos?
