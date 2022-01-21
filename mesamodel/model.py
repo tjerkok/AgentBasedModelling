@@ -39,6 +39,7 @@ class GroceryModel(Model):
         self.entry_pos = []
         self.exit_pos = []
         self.n_interactions = []
+        self.interactions_per_step = 0
         self.blocked_moves = {}
         self.standing_still = 0
         self.waiting_to_enter = set()
@@ -55,6 +56,7 @@ class GroceryModel(Model):
         # grid and datacollection
         self.grid = MultiGrid(self.width, self.height, torus=False)
         self.datacollector = DataCollector({ #TODO
+            "waiting_to_enter": lambda m: len(self.waiting_to_enter),
             "standing_still": lambda m: self.standing_still,
             "n_persons": lambda m: len([agent for agent in self.schedule.agents if isinstance(agent, Person)]),
             "n_done": lambda m: self.n_done,
@@ -64,7 +66,9 @@ class GroceryModel(Model):
             "speed": lambda m: [person.speed for person in self.persons],
             "familiar": lambda m: [person.familiar for person in self.persons],
             "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids],
-            "n_interactions": lambda m: np.mean(self.n_interactions)
+            "n_interactions": lambda m: self.count_mean_interactions(),
+            "mean_interactions": lambda m: self.count_mean_interactions(),
+            "interactions": lambda m: self.interactions_per_step
         })
 
         # placing obstacles, entry and exit
@@ -73,6 +77,12 @@ class GroceryModel(Model):
         # datacollector requirements
         self.running = True
         # self.datacollector.collect(self) # doing first collection in step()
+
+    def count_mean_interactions(self):
+        if self.n_interactions:
+            return np.mean(self.n_interactions)
+        else:
+            return 0
 
     def read_grid(self):
         """
@@ -165,6 +175,7 @@ class GroceryModel(Model):
         """
         self.datacollector.collect(self)
         self.standing_still = 0
+        self.interactions_per_step = 0
         self.schedule.step()
         if self.current_step in self.arrival_times or self.waiting_to_enter:
             self.add_person()
@@ -202,7 +213,7 @@ class GroceryModel(Model):
 
 if __name__ == "__main__":
 
-    with open('config.json', 'r') as f:
+    with open('config1.json', 'r') as f:
         config = json.load(f)
 
     model = GroceryModel(config)

@@ -1,3 +1,4 @@
+from xml.etree.ElementInclude import include
 from mesa import Agent
 import numpy as np
 import random
@@ -57,7 +58,7 @@ class Person(Agent):
         next_moves = self.find_route()
         print(f"planned move: {next_moves}")
         legal_moves = self.check_move(next_moves, astar=True)
-        if not legal_moves:
+        while not legal_moves:
             print("illegal move")
             if random.random() < 0.5:
                 next_moves = self.random_move()
@@ -68,7 +69,7 @@ class Person(Agent):
             else:
                 legal_moves = []
                 print("waiting one time step and see if someone wants to switch")
-
+                break
 
         # Make move
         if not legal_moves:
@@ -99,7 +100,6 @@ class Person(Agent):
             self.model.schedule.remove(self)
             self.model.grid.remove_agent(self)
             self.model.n_done += 1
-            self.int_rate_list.append(self.int_rate)
             self.model.n_interactions.append(self.int_rate)
             return True
 
@@ -111,10 +111,10 @@ class Person(Agent):
             return False
 
     def check_interactions(self,move):
-        print(f"check move {move}")
-        for agent in self.model.grid.get_cell_list_contents(move):
-            if isinstance(agent,Person) == True:
+        for agent in self.model.grid.get_neighbors(move, moore=self.moore, radius=1, include_center=False):
+            if isinstance(agent,Person) == True and agent != self:
                 self.tot_cont =+ 1
+                self.model.interactions_per_step += 1
                 if agent.unique_id not in self.people_bumped_into:
                     self.people_bumped_into.append(agent.unique_id)
                     self.int_rate = int(len(self.people_bumped_into))
@@ -122,7 +122,6 @@ class Person(Agent):
     def check_move(self, moves, astar=False):
         legal = []
         for move in moves:
-            print(move)
             if self.model.grid.out_of_bounds(move):
                 print("out of bounds move")
                 return legal
