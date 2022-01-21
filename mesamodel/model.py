@@ -10,6 +10,7 @@ import random
 import numpy as np
 from pkg_resources import EntryPoint
 import regex as re
+import copy
 
 from agent import Person, Obstacle, Objective
 
@@ -37,7 +38,9 @@ class GroceryModel(Model):
         self.current_step = 0
         self.entry_pos = []
         self.exit_pos = []
+        self.blocked_moves = {}
         self.standing_still = 0
+        self.waiting_to_enter = set()
         self.graph = nx.grid_2d_graph(self.height, self.width)
 
         # scheduling Poisson distribution times of persons arriving
@@ -73,8 +76,8 @@ class GroceryModel(Model):
         """
         Create grid from grid_layout.txt
         """
-        gridsize = re.search(r"_\d+x\d+", self.grid_layout)[0]
-        if int(gridsize[1:3]) != self.height or int(gridsize[1:3]) != self.width:
+        gridsize = re.search(r"_\d+", self.grid_layout)[0]
+        if int(gridsize[1:]) != self.height or int(gridsize[1:]) != self.width:
             print("width and height are not the same as layout.txt suggests!")
             raise ValueError
         objective_positions = []
@@ -115,6 +118,32 @@ class GroceryModel(Model):
 
     def add_person(self):
         # specify speed? Moore? pos?
+        if self.current_step in self.arrival_times:
+            person = self.create_person()
+        if self.waiting_to_enter:
+            if self.current_step in self.arrival_times:
+                self.waiting_to_enter.append(person)
+                print("new person to waiting list")
+            person = self.waiting_to_enter[0]
+            print("trying to enter again")
+        entry_posses = copy.copy(self.entry_pos)
+        entry_pos = random.choice(entry_posses)
+        while any([isinstance(agent, Person) for agent in self.grid.get_cell_list_contents(entry_pos)]):
+            entry_posses.remove(entry_pos)
+            random.shuffle(entry_posses)
+            entry_pos = entry_posses.pop()
+            if not entry_posses:
+                entry_pos = None
+                print("all entrances are blocked, waiting a turn")
+                self.waiting_to_enter.add(person)
+                return
+        if person in self.waiting_to_enter:
+            self.waiting_to_enter.remove(person)
+        self.grid.place_agent(person, entry_pos)
+        self.persons.append(person)
+        self.schedule.add(person)
+
+    def create_person(self):
         obs_to_choose = list(self.objectives.keys())
         if "exit" in obs_to_choose:
             obs_to_choose.remove("exit")
@@ -123,15 +152,10 @@ class GroceryModel(Model):
         objectives = random.choices((obs_to_choose), k=self.n_objectives)+ ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
-        entry_pos = random.choice(self.entry_pos)
+        entry_pos = None
+        person = Person(self.next_id(), random.choice(self.entry_pos), self, objectives=objectives, familiar=familiar, speed=speed)
         print(f"arriving! chose speed: {speed} and familiar: {familiar}")
-        person = Person(self.next_id(), entry_pos, self, objectives=objectives, familiar=familiar, speed=speed)
-        if not any([isinstance(agent, Person) for agent in self.grid.get_cell_list_contents(entry_pos)]):# self.grid.is_cell_empty(entry_pos):
-            self.grid.place_agent(person, entry_pos)
-            self.persons.append(person)
-            self.schedule.add(person)
-        else:
-            print("Could not enter!")
+        return person
 
     def step(self):
         """
@@ -140,7 +164,7 @@ class GroceryModel(Model):
         self.datacollector.collect(self)
         self.standing_still = 0
         self.schedule.step()
-        if self.current_step in self.arrival_times:
+        if self.current_step in self.arrival_times or self.waiting_to_enter:
             self.add_person()
         self.current_step += 1
 
@@ -172,48 +196,6 @@ class GroceryModel(Model):
                     count_obstacles += 1
         density = count_agents/abs(((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles))
         return density
-
-    # def calculate_density(self, n_subgrids=None):
-    #     # LO = subgrid[0] # Links onder
-    #     # RO = subgrid[1] # Rechts onder
-    #     # RB = subgrid[2] # Rechts boven
-    #     # LB = subgrid[3] # Links boven
-    #     dx = np.sqrt(self.width)
-    #     dy = np.sqrt(self.height)
-
-    #     x_subs = np.arange(0, self.width, dx)
-    #     y_subs = np.arange(0, self.height, dy)
-    #     print(x_subs)
-    #     print(y_subs)
-    #     density = 0
-        # person_locs = [person.pos for person in self.persons]
-        # obstacle_pos = [obstacle.pos for obstacle in self.obstacles]
-        # for i, xi in enumerate(x_subs):
-        #     for j, yj in enumerate(y_subs):
-        #         for x in range(x_subs[i], x_subs[i+1]):
-        #             for y in range(y_subs[j], y_subs[j+1]):
-
-                
-        # exit()
-        # # count_agents = 0
-        # count_obstacles = 0
-        # for x in range(LO[0], RO[0]+1):
-        #     for y in range(LB[1], LO[1]+1):
-        #         if (x, y) in [person.pos for person in self.persons]:
-        #             count_agents += 1
-        #         if (x, y) in [obstacle.pos for obstacle in self.obstacles]:
-        #             count_obstacles += 1
-        # density = count_agents/abs(((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles))
-        # return density
-
-    # def count_agents_subgrid(person_pos, obstacle_pos, x1, x2, y1, y2):
-    #     person_count = 0
-    #     obstacle_count = 0
-    #     for x in range(x1, x2):
-    #         for y in range(y1, y2):
-    #             if (x, y) in person_pos:
-    #                 pass
-
 
 
 if __name__ == "__main__":

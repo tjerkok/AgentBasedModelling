@@ -10,11 +10,11 @@ class Person(Agent):
         self.pos = pos
         self.objectives = objectives
         self.familiar = familiar
-        print(f"Originally Person {self.unique_id} has objs {self.objectives}")
+        # print(f"Originally Person {self.unique_id} has objs {self.objectives}")
         self.objectives_inc_coord = []
         self.get_objectives_coord()
         self.sort_objectives()
-        print(f"After sorting person {self.unique_id} has objs {self.new_objectives}")
+        print(f"{self} has objs {self.new_objectives}")
         self.next_objective()
         self.model = model
         self.speed = speed
@@ -50,21 +50,22 @@ class Person(Agent):
 
     def step(self):
         # Find next step
+        self.model.blocked_moves.pop(self, False)
         print(f"turn for {self} at {self.pos}")
         next_moves = self.find_route()
         print(f"planned move: {next_moves}")
-        legal_moves = self.check_move(next_moves)
+        legal_moves = self.check_move(next_moves, astar=True)
         if not legal_moves:
             print("illegal move")
             if random.random() < 0.5:
                 next_moves = self.random_move()
-                legal_moves = self.check_move(next_moves)
+                legal_moves = self.check_move([next_moves[0]])
                 if legal_moves:
-                    legal_moves = [legal_moves[0]]
+                    legal_moves = legal_moves
                 print(f"doing none one random move: {legal_moves}")
             else:
                 legal_moves = []
-                print("waiting one time step")
+                print("waiting one time step and see if someone wants to switch")
 
 
         # Make move
@@ -98,23 +99,43 @@ class Person(Agent):
             return True
 
         else:
-            print(f"{self} got {self.current_objective[0]}!\n")
+            print(f"{self} got {self.current_objective[0]}!")
             self.basket.append(self.current_objective[0])
             self.next_objective()
             print(f"getting next objective: {self.current_objective}")
             return False
 
-    def check_move(self, moves):
+    def check_move(self, moves, astar=False):
         legal = []
         for move in moves:
-            if self.model.grid.out_of_bounds(move) or any(
-                [isinstance(agent, (Person, Obstacle)) for agent in self.model.grid.get_cell_list_contents(move)]
-            ): 
+            blocking_person = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Person)]
+            dest_obstacles = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Obstacle)]
+            if self.model.grid.out_of_bounds(move) or blocking_person or dest_obstacles:
+                if blocking_person:
+                    legal = self.switch_places_check(blocking_person, move, legal, astar)    
                 return legal
             else: 
                 legal.append(move)
             if (any([isinstance(agent,Person) for agent in self.model.grid.get_cell_list_contents(move)])) == True:
                 self.cong =+ 1 
+        return legal
+
+    def switch_places_check(self, blocking_person, move, legal, astar):
+        blocking_person = blocking_person[0]
+        if blocking_person in self.model.blocked_moves.keys():
+            try:
+                if self.model.blocked_moves[blocking_person] == legal[-1]:
+                    print(f"Switching {self} at {legal[-1]} with {blocking_person} at {move}")
+                    self.model.grid.move_agent(blocking_person, legal[-1])
+                    legal.append(move)
+            except IndexError:
+                if self.model.blocked_moves[blocking_person] == self.pos:
+                    print(f"Switching {self} at {self.pos} with {blocking_person} at {move}")
+                    self.model.grid.move_agent(blocking_person, self.pos)
+                    legal = [move]
+            self.model.blocked_moves.pop(blocking_person, False)
+        elif astar:
+            self.model.blocked_moves[self] = move
         return legal
 
     def find_route(self):
@@ -161,7 +182,7 @@ class Person(Agent):
             x, y = moves[-1]
         return moves
 
-    def __str__(self):
+    def __repr__(self):
         return f"Person {self.unique_id}" # at {self.pos}"
     
 
