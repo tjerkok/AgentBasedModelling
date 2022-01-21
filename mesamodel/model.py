@@ -27,19 +27,20 @@ class GroceryModel(Model):
         self.n_steps = config["n_steps"]
         self.speed_dist = config["speed_dist"]
         self.familiar_dist = config["familiar_dist"]
+        self.vision_dist = config["vision_dist"]
         self.grid_stepsize = config["grid_stepsize"]
         self.n_objectives = config["n_objectives"]
         self.list_subgrids = config["list_subgrids"]
         self.obstacles = []
         self.objectives = {}
         self.persons = []
+        self.persons_instore = []
         self.n_done = 0
         self.arrival_times = [0]
         self.current_step = 0
         self.entry_pos = []
         self.exit_pos = []
-        self.n_interactions = []
-        # self.interactions_per_step = 0
+        self.n_interactions = []    # interactions per person who is done shopping
         self.interactions_per_step = [0]
         self.blocked_moves = {}
         self.standing_still = 0
@@ -135,7 +136,7 @@ class GroceryModel(Model):
             person = self.create_person()
         if self.waiting_to_enter:
             if self.current_step in self.arrival_times:
-                self.waiting_to_enter.append(person)
+                self.waiting_to_enter.add(person)
                 print("new person to waiting list")
             person = self.waiting_to_enter[0]
             print("trying to enter again")
@@ -155,6 +156,7 @@ class GroceryModel(Model):
         self.grid.place_agent(person, entry_pos)
         self.persons.append(person)
         self.schedule.add(person)
+        self.persons_instore.append(person)
 
     def create_person(self):
         obs_to_choose = list(self.objectives.keys())
@@ -165,15 +167,16 @@ class GroceryModel(Model):
         objectives = random.choices((obs_to_choose), k=self.n_objectives)+ ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
-        entry_pos = None
-        person = Person(self.next_id(), random.choice(self.entry_pos), self, objectives=objectives, familiar=familiar, speed=speed)
-        print(f"arriving! chose speed: {speed} and familiar: {familiar}")
+        vision = random.choices(self.vision_dist[0], weights=self.vision_dist[1])[0]
+        person = Person(self.next_id(), random.choice(self.entry_pos), self, objectives=objectives, familiar=familiar, speed=speed, vision=vision)
+        # print(f"arriving! chose speed: {speed}, familiar: {familiar} and vision: {vision}")
         return person
 
     def step(self):
         """
         Calls step method for each person
         """
+        print(f"{self.current_step} || in store: {len(self.persons_instore)}, done: {self.n_done}")
         self.datacollector.collect(self)
         self.interactions_per_step.append(0)
         self.standing_still = 0
@@ -181,6 +184,19 @@ class GroceryModel(Model):
         if self.current_step in self.arrival_times or self.waiting_to_enter:
             self.add_person()
         self.current_step += 1
+    
+    def calculate_weights(self, pos, vision):
+        positions = [person.pos for person in self.persons_instore \
+                    if np.sqrt((person.pos[0]-pos[0])**2 + (person.pos[1]-pos[1])**2) <= vision \
+                    and pos != person.pos]
+        weights = {}
+        for edge in self.graph.edges():
+            if edge[0] in positions or edge[1] in positions:
+                weights[edge] = 5
+            else:
+                weights[edge] = 1
+        nx.set_edge_attributes(self.graph, name="weight", values=weights)
+
 
     def run_model(self, n_steps=100):
         """

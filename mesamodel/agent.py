@@ -5,7 +5,7 @@ import random
 import networkx as nx
 
 class Person(Agent):
-    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1):
+    def __init__(self, unique_id, pos, model, objectives,familiar, moore=False, speed=1, vision=1):
         super().__init__(unique_id, model)
         self.person_id = len(self.model.persons) + 1
         self.pos = pos
@@ -15,7 +15,7 @@ class Person(Agent):
         self.objectives_inc_coord = []
         self.get_objectives_coord()
         self.sort_objectives()
-        print(f"{self} has objs {self.new_objectives}")
+        # print(f"{self} has objs {self.new_objectives}")
         self.next_objective()
         self.model = model
         self.speed = speed
@@ -26,6 +26,7 @@ class Person(Agent):
         self.int_rate = 0
         self.people_bumped_into = []
         self.tot_cont = 0
+        self.vision = vision
 
 
     def get_objectives_coord(self):
@@ -54,21 +55,21 @@ class Person(Agent):
     def step(self):
         # Find next step
         self.model.blocked_moves.pop(self, False)
-        print(f"turn for {self} at {self.pos}")
+        # print(f"turn for {self} at {self.pos}")
         next_moves = self.find_route()
-        print(f"planned move: {next_moves}")
+        # print(f"planned move: {next_moves}")
         legal_moves = self.check_move(next_moves, astar=True)
         while not legal_moves:
-            print("illegal move")
+            # print("illegal move")
             if random.random() < 0.5:
                 next_moves = self.random_move()
                 legal_moves = self.check_move([next_moves[0]])
                 if legal_moves:
                     legal_moves = legal_moves
-                print(f"doing none one random move: {legal_moves}")
+                # print(f"doing none one random move: {legal_moves}")
             else:
                 legal_moves = []
-                print("waiting one time step and see if someone wants to switch")
+                # print("waiting one time step and see if someone wants to switch")
                 break
 
         # Make move
@@ -86,7 +87,8 @@ class Person(Agent):
             if self.reached_objective():
                 print("agent is removed")
                 return
-
+        # if self.pos != self.route[-1]:
+        #     print(f"moved to {self.pos}")
         self.steps_instore += 1
         self.route.append(self.pos)
 
@@ -101,13 +103,14 @@ class Person(Agent):
             self.model.grid.remove_agent(self)
             self.model.n_done += 1
             self.model.n_interactions.append(self.int_rate)
+            self.model.persons_instore.remove(self)
             return True
 
         else:
-            print(f"{self} got {self.current_objective[0]}!")
+            # print(f"{self} got {self.current_objective[0]}!")
             self.basket.append(self.current_objective[0])
             self.next_objective()
-            print(f"getting next objective: {self.current_objective}")
+            # print(f"getting next objective: {self.current_objective}")
             return False
 
     def check_interactions(self,move):
@@ -186,7 +189,8 @@ class Person(Agent):
 
 
     def astar_move(self):
-        route = nx.astar_path(self.model.graph, self.pos, self.current_objective[1], heuristic=self.dist)
+        self.model.calculate_weights(self.pos, self.vision)
+        route = nx.astar_path(self.model.graph, self.pos, self.current_objective[1], heuristic=self.dist, weight="weight")
         return route[1:self.speed+1]
 
 
