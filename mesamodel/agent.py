@@ -22,7 +22,9 @@ class Person(Agent):
         self.basket = []
         self.route = [self.pos]
         self.steps_instore = 0
-        self.cong = 0
+        self.int_rate = 0
+        self.people_bumped_into = []
+        self.tot_cont = 0
 
 
     def get_objectives_coord(self):
@@ -73,6 +75,7 @@ class Person(Agent):
             self.model.standing_still += 1
         for move in legal_moves:
             if move != self.pos:
+                self.check_interactions(move)
                 self.model.grid.move_agent(self, move)
         # if self.pos == self.current_objective[1]:
         #     self.reached_objective()
@@ -96,6 +99,8 @@ class Person(Agent):
             self.model.schedule.remove(self)
             self.model.grid.remove_agent(self)
             self.model.n_done += 1
+            self.int_rate_list.append(self.int_rate)
+            self.model.n_interactions.append(self.int_rate)
             return True
 
         else:
@@ -105,19 +110,31 @@ class Person(Agent):
             print(f"getting next objective: {self.current_objective}")
             return False
 
+    def check_interactions(self,move):
+        print(f"check move {move}")
+        for agent in self.model.grid.get_cell_list_contents(move):
+            if isinstance(agent,Person) == True:
+                self.tot_cont =+ 1
+                if agent.unique_id not in self.people_bumped_into:
+                    self.people_bumped_into.append(agent.unique_id)
+                    self.int_rate = int(len(self.people_bumped_into))
+
     def check_move(self, moves, astar=False):
         legal = []
         for move in moves:
-            blocking_person = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Person)]
-            dest_obstacles = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Obstacle)]
-            if self.model.grid.out_of_bounds(move) or blocking_person or dest_obstacles:
-                if blocking_person:
-                    legal = self.switch_places_check(blocking_person, move, legal, astar)    
+            print(move)
+            if self.model.grid.out_of_bounds(move):
+                print("out of bounds move")
                 return legal
-            else: 
-                legal.append(move)
-            if (any([isinstance(agent,Person) for agent in self.model.grid.get_cell_list_contents(move)])) == True:
-                self.cong =+ 1 
+            else:
+                blocking_person = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Person)]
+                dest_obstacles = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Obstacle)]
+                if blocking_person or dest_obstacles:
+                    if blocking_person:
+                        legal = self.switch_places_check(blocking_person, move, legal, astar)    
+                    return legal
+                else: 
+                    legal.append(move)
         return legal
 
     def switch_places_check(self, blocking_person, move, legal, astar):

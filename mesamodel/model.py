@@ -38,6 +38,7 @@ class GroceryModel(Model):
         self.current_step = 0
         self.entry_pos = []
         self.exit_pos = []
+        self.n_interactions = []
         self.blocked_moves = {}
         self.standing_still = 0
         self.waiting_to_enter = set()
@@ -62,7 +63,8 @@ class GroceryModel(Model):
             "steps_in_stores": lambda m: [person.steps_instore for person in self.persons],
             "speed": lambda m: [person.speed for person in self.persons],
             "familiar": lambda m: [person.familiar for person in self.persons],
-            "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids]
+            "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids],
+            "n_interactions": lambda m: np.mean(self.n_interactions)
         })
 
         # placing obstacles, entry and exit
@@ -77,9 +79,9 @@ class GroceryModel(Model):
         Create grid from grid_layout.txt
         """
         gridsize = re.search(r"_\d+", self.grid_layout)[0]
-        if int(gridsize[1:]) != self.height or int(gridsize[1:]) != self.width:
-            print("width and height are not the same as layout.txt suggests!")
-            raise ValueError
+        # if int(gridsize[1:]) != self.height or int(gridsize[1:]) != self.width:
+        #     print("width and height are not the same as layout.txt suggests!")
+        #     raise ValueError
         objective_positions = []
         with open(self.grid_layout, 'r') as f:
             lines = f.readlines()
