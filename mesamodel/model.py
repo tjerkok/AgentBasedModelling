@@ -138,7 +138,7 @@ class GroceryModel(Model):
             if self.current_step in self.arrival_times:
                 self.waiting_to_enter.add(person)
                 print("new person to waiting list")
-            person = self.waiting_to_enter[0]
+            person = list(self.waiting_to_enter)[0]
             print("trying to enter again")
         entry_posses = copy.copy(self.entry_pos)
         entry_pos = random.choice(entry_posses)
