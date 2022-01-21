@@ -4,7 +4,7 @@
     "n_persons": 100, 
     "n_items": 1, 
     "grid_layout": "grids/simple_100x100.txt", 
-    "avg_arrival": 5, 
+    "avg_arrival": 1, 
     "n_steps": 1000, 
     "speed_dist": [[3, 2], [1.0, 0.0]], 
     "familiar_dist": [[1, 0.6], [1.0, 0.0]], 

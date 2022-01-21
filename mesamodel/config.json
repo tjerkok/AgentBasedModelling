@@ -1,1 +1,0 @@
-{"height": 16, "width": 16, "n_persons": 10, "n_items": 1, "grid_layout": "grids/vertical_16x16.txt", "avg_arrival": 4, "n_steps": 1000, "speed_dist": [[1, 2], [0.5, 0.5]], "familiar_dist": [[1, 0.6], [0.75, 0.25]], "n_objectives": 4, "grid_stepsize": 0.5, "list_subgrids": [[[8, 15], [15, 15], [15, 8], [8, 8]], [[0, 7], [7, 7], [7, 0], [0, 0]]]}
