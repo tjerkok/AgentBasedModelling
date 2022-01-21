@@ -39,7 +39,8 @@ class GroceryModel(Model):
         self.entry_pos = []
         self.exit_pos = []
         self.n_interactions = []
-        self.interactions_per_step = 0
+        # self.interactions_per_step = 0
+        self.interactions_per_step = [0]
         self.blocked_moves = {}
         self.standing_still = 0
         self.waiting_to_enter = set()
@@ -68,7 +69,7 @@ class GroceryModel(Model):
             "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids],
             "n_interactions": lambda m: self.count_mean_interactions(),
             "mean_interactions": lambda m: self.count_mean_interactions(),
-            "interactions": lambda m: self.interactions_per_step
+            "interactions": lambda m: self.interactions_per_step[-1]
         })
 
         # placing obstacles, entry and exit
@@ -79,8 +80,8 @@ class GroceryModel(Model):
         # self.datacollector.collect(self) # doing first collection in step()
 
     def count_mean_interactions(self):
-        if self.n_interactions:
-            return np.mean(self.n_interactions)
+        if self.interactions_per_step:
+            return np.mean(self.interactions_per_step)
         else:
             return 0
 
@@ -174,8 +175,8 @@ class GroceryModel(Model):
         Calls step method for each person
         """
         self.datacollector.collect(self)
+        self.interactions_per_step.append(0)
         self.standing_still = 0
-        self.interactions_per_step = 0
         self.schedule.step()
         if self.current_step in self.arrival_times or self.waiting_to_enter:
             self.add_person()

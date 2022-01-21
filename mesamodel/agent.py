@@ -114,7 +114,7 @@ class Person(Agent):
         for agent in self.model.grid.get_neighbors(move, moore=self.moore, radius=1, include_center=False):
             if isinstance(agent,Person) == True and agent != self:
                 self.tot_cont =+ 1
-                self.model.interactions_per_step += 1
+                self.model.interactions_per_step[-1] += 1
                 if agent.unique_id not in self.people_bumped_into:
                     self.people_bumped_into.append(agent.unique_id)
                     self.int_rate = int(len(self.people_bumped_into))
