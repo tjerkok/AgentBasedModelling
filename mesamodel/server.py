@@ -44,14 +44,14 @@ class GroceryServer:
                       "Color": "red"}],
                     data_collector_name='datacollector')
         chart2 = ChartModule([{"Label": "standing_still",
-                      "Color": "green"}],
-                    data_collector_name='datacollector')
+                      "Color": "green"},
+                      {"Label": "waiting_to_enter",
+                      "Color": "blue"}],
+                         data_collector_name='datacollector')
+        chart3 = ChartModule([{"Label": "n_interactions",
+                               "Color": "red"}])
 
         server = ModularServer(
-            GroceryModel, [canvas_element, chart1, chart2], "Grocery Model", self.config
+            GroceryModel, [canvas_element, chart1, chart2, chart3], "Grocery Model", self.config
         )
         server.launch()
-
-
-
-
