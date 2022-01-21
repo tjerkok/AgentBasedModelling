@@ -3,7 +3,7 @@
     "width": 16, 
     "n_persons": 100, 
     "n_items": 1, 
-    "grid_layout": "grids/vertical_16x16.txt", 
+    "grid_layout": "grids/vertical_16x16_shortcuts.txt", 
     "avg_arrival": 3, 
     "n_steps": 1000, 
     "speed_dist": [[3, 2], [1.0, 0.0]], 
