@@ -72,3 +72,16 @@ uu,33,29,v,6
 vv,34,28,h,30
 wall,34,29,v,6
 wall,35,29,h,30
+wall,3,35,h,31
+wall,3,0,h,7
+wall,3,4,h,7
+wall,3,5,h,7
+wall,3,6,h,7
+wall,3,10,h,7
+wall,3,11,h,7
+wall,3,12,h,7
+wall,3,16,h,7
+wall,3,17,h,7
+wall,3,18,h,7
+wall,3,22,h,7
+wall,3,23,h,7
