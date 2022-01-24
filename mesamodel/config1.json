@@ -1,9 +1,9 @@
 {
-    "height": 35, 
+    "height": 65, 
     "width": 65, 
     "n_persons": 100, 
     "n_items": 1, 
-    "grid_layout": "grids/real_more_65x35.txt", 
+    "grid_layout": "grids/real_less_65x35.txt", 
     "avg_arrival": 1, 
     "n_steps": 1000, 
     "speed_dist": [[1, 2], [1.0, 0.0]], 
