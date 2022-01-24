@@ -112,7 +112,7 @@ class GroceryModel(Model):
                         self.entry_pos.append(pos)
                     elif type == "exit":
                         self.exit_pos.append(pos)
-
+                    
                     if type == "wall":
                         obstacle = Obstacle(self.next_id(), pos, self, obstacle_type=type)
                         self.obstacles.append(obstacle)
@@ -124,7 +124,7 @@ class GroceryModel(Model):
                         objective = Objective(self.next_id(), pos, self, objective_type=type)
                         self.grid.place_agent(objective, pos)
                         self.schedule.add(objective)
-                        self.graph.nodes[pos]["type"] = "objective"
+                        # self.graph.nodes[pos]["type"] = "objective"
                         if type not in self.objectives.keys():
                             self.objectives[type] = []
                         self.objectives[type].append(pos)
