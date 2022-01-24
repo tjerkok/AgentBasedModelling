@@ -4,20 +4,24 @@ from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.space import SingleGrid, MultiGrid # TODO: do we need multi?
 from mesa.time import RandomActivation
+from csv import writer, DictWriter
 import networkx as nx
+import numpy as np
 import json
 import random
-import numpy as np
 from pkg_resources import EntryPoint
 import regex as re
+import dill as pkl # weirde aangepaste pickle die pandas dataframe wel oké vindt
 import copy
+import os
 
 from agent import Person, Obstacle, Objective
 
 class GroceryModel(Model):
-    def __init__(self, config):
+    def __init__(self, config, log=False):
         # attributes
         super().__init__()
+        self.config = config
         self.height = config["height"]
         self.width = config["width"]
         self.n_persons = config["n_persons"]
@@ -46,6 +50,7 @@ class GroceryModel(Model):
         self.standing_still = 0
         self.waiting_to_enter = set()
         self.graph = nx.grid_2d_graph(self.height, self.width)
+        self.log_bool = log
 
         # scheduling Poisson distribution times of persons arriving
         for i in range(self.n_persons - 1):
@@ -124,7 +129,7 @@ class GroceryModel(Model):
                         objective = Objective(self.next_id(), pos, self, objective_type=type)
                         self.grid.place_agent(objective, pos)
                         self.schedule.add(objective)
-                        self.graph.nodes[pos]["type"] = "objective"
+                        # self.graph.nodes[pos]["type"] = "objective"
                         if type not in self.objectives.keys():
                             self.objectives[type] = []
                         self.objectives[type].append(pos)
@@ -177,6 +182,7 @@ class GroceryModel(Model):
         Calls step method for each person
         """
         print(f"{self.current_step} || in store: {len(self.persons_instore)}, done: {self.n_done}")
+
         self.datacollector.collect(self)
         self.interactions_per_step.append(0)
         self.standing_still = 0
@@ -207,9 +213,13 @@ class GroceryModel(Model):
             #     self.add_person()
             self.step()
 
-            if not any([isinstance(agent, Person) for agent in self.schedule.agents]) and i > self.arrival_times[-1]:
-                self.datacollector.collect(self)
-                return
+            # if not any([isinstance(agent, Person) for agent in self.schedule.agents]) and i > self.arrival_times[-1]:
+        
+        self.datacollector.collect(self)
+        print("collected last data")
+        if self.log_bool:
+            self.log()
+        return
     
     def calculate_density(self, subgrid):
         LO = subgrid[0] # Links onder
@@ -226,6 +236,27 @@ class GroceryModel(Model):
                     count_obstacles += 1
         density = count_agents/abs(((RO[0]-LO[0])*(LB[1]-LO[1])-count_obstacles))
         return density
+
+    def log(self):
+        exp_number = 0
+        while os.path.isdir(f"experiments/experiment_{exp_number}"):
+            exp_number += 1
+        os.mkdir(f"experiments/experiment_{exp_number}")
+        with open(f"experiments/experiment_{exp_number}/config1.json", 'w') as f:
+            json.dump(self.config, f)
+        pd_data = copy.copy(self.datacollector.get_model_vars_dataframe())
+        with open(f"experiments/experiment_{exp_number}/dataframe.pkl", "wb") as pickle_file:
+            pkl.dump(pd_data, pickle_file)
+
+
+        logdata = {"exp_number": exp_number}
+        logdata.update(self.config)
+
+        fieldnames = list(logdata.keys())
+        with open("experiments_log.csv", "a") as f:
+
+            writer_file = DictWriter(f, fieldnames=fieldnames)
+            writer_file.writerow(logdata)
 
 
 if __name__ == "__main__":

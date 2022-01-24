@@ -1,0 +1,1 @@
+{"height": 100, "width": 100, "n_persons": 100, "n_items": 1, "grid_layout": "grids/simple_100x100.txt", "avg_arrival": 1, "n_steps": 20, "speed_dist": [[3, 2], [1.0, 0.0]], "familiar_dist": [[1, 0.6], [1.0, 0.0]], "vision_dist": [[10], [1.0]], "n_objectives": 8, "grid_stepsize": 0.5, "list_subgrids": [[[4, 10], [10, 10], [10, 0], [4, 0]], [[0, 10], [3, 10], [3, 5], [0, 5]]]}
