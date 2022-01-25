@@ -196,7 +196,8 @@ class GroceryModel(Model):
             obs_to_choose.remove("exit")
         if "entry" in obs_to_choose:
             obs_to_choose.remove("entry")
-        objectives = random.choices((obs_to_choose), k=self.n_objectives)+ ["exit"]
+        n_obj = random.expovariate(1/self.n_objectives)
+        objectives = random.choices((obs_to_choose), k=n_obj)+ ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
         vision = random.choices(self.vision_dist[0], weights=self.vision_dist[1])[0]
