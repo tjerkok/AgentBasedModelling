@@ -27,6 +27,7 @@ class Person(Agent):
         self.people_bumped_into = []
         self.tot_cont = 0
         self.vision = vision
+        self.n_switches = 0
 
 
     def get_objectives_coord(self):
@@ -85,7 +86,7 @@ class Person(Agent):
             self.familiar = round(self.familiar + 0.01, 2)
         if self.pos == self.current_objective[1]:
             if self.reached_objective():
-                print("agent is removed")
+                # print("agent is removed")
                 return
         # if self.pos != self.route[-1]:
         #     print(f"moved to {self.pos}")
@@ -98,7 +99,8 @@ class Person(Agent):
         Returns True if agent is at exit, else False
         """
         if self.current_objective[0] == "exit":
-            print(f"{self} is done shopping, removing...")
+            if self.model.print_bool:
+                print(f"{self} is done shopping, removing...")
             self.model.schedule.remove(self)
             self.model.grid.remove_agent(self)
             self.model.n_done += 1
@@ -126,7 +128,7 @@ class Person(Agent):
         legal = []
         for move in moves:
             if self.model.grid.out_of_bounds(move):
-                print("out of bounds move")
+                # print("out of bounds move")
                 return legal
             else:
                 blocking_person = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Person)]
@@ -144,14 +146,16 @@ class Person(Agent):
         if blocking_person in self.model.blocked_moves.keys():
             try:
                 if self.model.blocked_moves[blocking_person] == legal[-1]:
-                    print(f"Switching {self} at {legal[-1]} with {blocking_person} at {move}")
+                    # print(f"Switching {self} at {legal[-1]} with {blocking_person} at {move}")
                     self.model.grid.move_agent(blocking_person, legal[-1])
                     legal.append(move)
+                    self.n_switches += 1
             except IndexError:
                 if self.model.blocked_moves[blocking_person] == self.pos:
-                    print(f"Switching {self} at {self.pos} with {blocking_person} at {move}")
+                    # print(f"Switching {self} at {self.pos} with {blocking_person} at {move}")
                     self.model.grid.move_agent(blocking_person, self.pos)
                     legal = [move]
+                    self.n_switches += 1                    
             self.model.blocked_moves.pop(blocking_person, False)
         elif astar:
             self.model.blocked_moves[self] = move
@@ -177,7 +181,7 @@ class Person(Agent):
         if np.random.uniform(0,1) <= self.familiar: 
             moves = self.astar_move()
         else:
-            print(f"not familiar, random moves")
+            # print(f"not familiar, random moves")
             moves = self.random_move()
         return moves
 
