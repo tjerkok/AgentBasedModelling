@@ -18,22 +18,41 @@ import os
 from agent import Person, Obstacle, Objective
 
 class GroceryModel(Model):
-    def __init__(self, config, log=False):
+    def __init__(self, config, log=False, print_bool=True):
         # attributes
         super().__init__()
         self.config = config
         self.height = config["height"]
         self.width = config["width"]
-        self.n_persons = config["n_persons"]
-        self.n_items = config["n_items"]
+        self.n_persons = int(config["n_persons"])
+        self.n_items = int(config["n_items"])
         self.grid_layout = config["grid_layout"]
         self.avg_arrival = config["avg_arrival"]
-        self.n_steps = config["n_steps"]
-        self.speed_dist = config["speed_dist"]
-        self.familiar_dist = config["familiar_dist"]
-        self.vision_dist = config["vision_dist"]
+        self.n_steps = int(config["n_steps"])
+        
+        # self.speed_dist = config["speed_dist"]
+        self.speed1 = int(config["speed1"])
+        self.speed2 = int(config["speed2"])
+        self.speed2_prob = config["speed2_prob"]
+        self.speed1_prob = 1 - self.speed2_prob
+        self.speed_dist = [[self.speed1, self.speed2], [self.speed1_prob, self.speed2_prob]]
+        
+        # self.familiar_dist = config["familiar_dist"]
+        self.familiar1 = config["familiar1"]
+        self.familiar2 = config["familiar2"]
+        self.familiar2_prob = config["familiar2_prob"]
+        self.familiar1_prob = 1 - self.familiar2_prob
+        self.familiar_dist = [[self.familiar1, self.familiar2], [self.familiar1_prob, self.familiar2_prob]]
+
+        # self.vision_dist = config["vision_dist"]
+        self.vision1 = int(config["vision1"])
+        self.vision2 = int(config["vision2"])
+        self.vision2_prob = config["vision2_prob"]
+        self.vision1_prob = 1 - self.vision2_prob
+        self.vision_dist = [[self.vision1, self.vision2], [self.vision1_prob, self.vision2_prob]]
+
         self.grid_stepsize = config["grid_stepsize"]
-        self.n_objectives = config["n_objectives"]
+        self.n_objectives = int(config["n_objectives"])
         self.list_subgrids = config["list_subgrids"]
         self.obstacles = []
         self.objectives = {}
@@ -48,15 +67,18 @@ class GroceryModel(Model):
         self.interactions_per_step = [0]
         self.blocked_moves = {}
         self.standing_still = 0
-        self.waiting_to_enter = set()
+        self.waiting_to_enter = []
         self.graph = nx.grid_2d_graph(self.height, self.width)
         self.log_bool = log
+        self.print_bool = print_bool
 
         # scheduling Poisson distribution times of persons arriving
         for i in range(self.n_persons - 1):
             time = int(round(random.expovariate(1/self.avg_arrival)))
-            self.arrival_times.append(self.arrival_times[-1] + time)
+            self.arrival_times.append(self.arrival_times[-1] + time) 
 
+        if self.print_bool:
+            print(f"arrival times (length {len(self.arrival_times)}): {self.arrival_times}")
         # schedule
         self.schedule = RandomActivation(self)
 
@@ -75,7 +97,8 @@ class GroceryModel(Model):
             "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids],
             "n_interactions": lambda m: self.count_mean_interactions(),
             "mean_interactions": lambda m: self.count_mean_interactions(),
-            "interactions": lambda m: self.interactions_per_step[-1]
+            "interactions": lambda m: self.interactions_per_step[-1],
+            "total_switches": lambda m: sum([person.n_switches for person in self.persons])
         })
 
         # placing obstacles, entry and exit
@@ -135,33 +158,37 @@ class GroceryModel(Model):
                         self.objectives[type].append(pos)
                         objective_positions.append(pos)
 
-    def add_person(self):
-        # specify speed? Moore? pos?
-        if self.current_step in self.arrival_times:
-            person = self.create_person()
-        if self.waiting_to_enter:
-            if self.current_step in self.arrival_times:
-                self.waiting_to_enter.add(person)
-                print("new person to waiting list")
-            person = list(self.waiting_to_enter)[0]
-            print("trying to enter again")
+    def add_person(self, waited):
         entry_posses = copy.copy(self.entry_pos)
-        entry_pos = random.choice(entry_posses)
+        random.shuffle(entry_posses)
+        entry_pos = entry_posses.pop(0)
         while any([isinstance(agent, Person) for agent in self.grid.get_cell_list_contents(entry_pos)]):
-            entry_posses.remove(entry_pos)
-            random.shuffle(entry_posses)
-            entry_pos = entry_posses.pop()
             if not entry_posses:
-                entry_pos = None
-                print("all entrances are blocked, waiting a turn")
-                self.waiting_to_enter.add(person)
-                return
-        if person in self.waiting_to_enter:
-            self.waiting_to_enter.remove(person)
+                if not waited:
+                    person = self.create_person()
+                    self.waiting_to_enter.append(person)
+                    print("added new person to waiting list")
+                else:
+                    print("no entry for person from waiting list")
+                return False #telling step() there is no entry available
+            entry_pos = entry_posses.pop(0)
+        
+        if waited:
+            person = self.waiting_to_enter.pop(0)
+        else:
+            person = self.create_person()
+
         self.grid.place_agent(person, entry_pos)
         self.persons.append(person)
         self.schedule.add(person)
         self.persons_instore.append(person)
+        if self.print_bool:
+            if waited: 
+                print("placed new person from waiting list")
+            else: 
+                print("placed new person from arrival")
+        return True
+
 
     def create_person(self):
         obs_to_choose = list(self.objectives.keys())
@@ -169,7 +196,8 @@ class GroceryModel(Model):
             obs_to_choose.remove("exit")
         if "entry" in obs_to_choose:
             obs_to_choose.remove("entry")
-        objectives = random.choices((obs_to_choose), k=self.n_objectives)+ ["exit"]
+        n_obj = int(round(random.expovariate(1/self.n_objectives)))
+        objectives = random.choices((obs_to_choose), k=n_obj)+ ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
         vision = random.choices(self.vision_dist[0], weights=self.vision_dist[1])[0]
@@ -181,14 +209,24 @@ class GroceryModel(Model):
         """
         Calls step method for each person
         """
-        print(f"{self.current_step} || in store: {len(self.persons_instore)}, done: {self.n_done}")
+        if self.print_bool:
+            to_arrive = len([a for a in self.arrival_times if a >= self.current_step])
+            print(f"{self.current_step} || in store: {len(self.persons_instore)}, done: {self.n_done}, waiting: {len(self.waiting_to_enter)}, expecting: {to_arrive} | total: {len(self.persons_instore) + self.n_done + len(self.waiting_to_enter) + to_arrive}")
 
         self.datacollector.collect(self)
         self.interactions_per_step.append(0)
         self.standing_still = 0
         self.schedule.step()
-        if self.current_step in self.arrival_times or self.waiting_to_enter:
-            self.add_person()
+
+        if self.waiting_to_enter:
+            added = self.add_person(waited=True)
+            if not added:
+                print("no place for new waiting person")
+            while added and self.waiting_to_enter:
+                added = self.add_person(waited=True)
+
+        for i in range(self.arrival_times.count(self.current_step)):
+            self.add_person(waited=False)
         self.current_step += 1
     
     def calculate_weights(self, pos, vision):
@@ -216,7 +254,7 @@ class GroceryModel(Model):
             # if not any([isinstance(agent, Person) for agent in self.schedule.agents]) and i > self.arrival_times[-1]:
         
         self.datacollector.collect(self)
-        print("collected last data")
+        # print("collected last data")
         if self.log_bool:
             self.log()
         return

@@ -1,0 +1,8 @@
+parameter,min,max,step
+avg_arrival,1,11,2
+speed2,2,5,1
+speed2_prob,0,1,0.1
+familiar2,0.5,1,0.1
+familiar2_prob,0,1,0.1
+vision2,4,10,1
+vision2_prob,0,1,0.1

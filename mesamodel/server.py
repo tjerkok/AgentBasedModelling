@@ -48,8 +48,10 @@ class GroceryServer:
                          data_collector_name='datacollector')
         chart3 = ChartModule([{"Label": "mean_interactions",
                                "Color": "red"},
-                               {"Label": "interactions",
-                                "Color": "blue"}],
+                              {"Label": "interactions",
+                                "Color": "blue"},
+                              {"Label": "total_switches",
+                              "Color": "green"}],
                                data_collector_name='datacollector')
 
         server = ModularServer(
