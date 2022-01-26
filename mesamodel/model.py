@@ -55,10 +55,12 @@ class GroceryModel(Model):
         self.n_objectives = int(config["n_objectives"])
         self.list_subgrids = config["list_subgrids"]
         self.obstacles = []
-        self.objectives = {}
+        self.objectives_dict = {}
+        self.objectives = []
         self.persons = []
         self.persons_instore = []
         self.n_done = 0
+        self.done = []
         self.arrival_times = [0]
         self.current_step = 0
         self.entry_pos = []
@@ -71,14 +73,15 @@ class GroceryModel(Model):
         self.graph = nx.grid_2d_graph(self.height, self.width)
         self.log_bool = log
         self.print_bool = print_bool
+        self.shop_open = True
 
         # scheduling Poisson distribution times of persons arriving
         for i in range(self.n_persons - 1):
             time = int(round(random.expovariate(1/self.avg_arrival)))
             self.arrival_times.append(self.arrival_times[-1] + time) 
 
-        if self.print_bool:
-            print(f"arrival times (length {len(self.arrival_times)}): {self.arrival_times}")
+        # if self.print_bool:
+        #     print(f"arrival times (length {len(self.arrival_times)}): {self.arrival_times}")
         # schedule
         self.schedule = RandomActivation(self)
 
@@ -91,14 +94,15 @@ class GroceryModel(Model):
             "n_done": lambda m: self.n_done,
             "persons": lambda m: [agent for agent in self.schedule.agents if isinstance(agent, Person)], # self.schedule.get_agent_count(),
             "person_locs": lambda m: [person.pos for person in self.persons],
-            "steps_in_stores": lambda m: [person.steps_instore for person in self.persons],
+            "mean_steps ": lambda m: [person.steps_instore for person in self.persons],
             "speed": lambda m: [person.speed for person in self.persons],
             "familiar": lambda m: [person.familiar for person in self.persons],
             "densities": lambda m: [self.calculate_density(sub_grid) for sub_grid in self.list_subgrids],
-            "n_interactions": lambda m: self.count_mean_interactions(),
-            "mean_interactions": lambda m: self.count_mean_interactions(),
+            "mean_interactions_done": lambda m: self.count_mean_interactions(),
             "interactions": lambda m: self.interactions_per_step[-1],
-            "total_switches": lambda m: sum([person.n_switches for person in self.persons])
+            "total_switches": lambda m: sum([person.n_switches for person in self.persons]),
+            "mean_steps_done": lambda m: self.count_mean_steps(),
+            "mean_distance_done": lambda m: self.count_mean_distance()
         })
 
         # placing obstacles, entry and exit
@@ -109,8 +113,23 @@ class GroceryModel(Model):
         # self.datacollector.collect(self) # doing first collection in step()
 
     def count_mean_interactions(self):
-        if self.interactions_per_step:
-            return np.mean(self.interactions_per_step)
+        interactions = [person.int_rate for person in self.done]
+        if interactions:
+            return np.mean(interactions)
+        else:
+            return 0
+
+    def count_mean_steps(self):
+        steps = [person.steps_instore for person in self.done]
+        if steps:
+            return np.mean(steps)
+        else:
+            return 0
+        
+    def count_mean_distance(self):
+        distances = [person.distance for person in self.done]
+        if distances:
+            return np.mean(distances)
         else:
             return 0
 
@@ -119,9 +138,7 @@ class GroceryModel(Model):
         Create grid from grid_layout.txt
         """
         gridsize = re.search(r"_\d+", self.grid_layout)[0]
-        # if int(gridsize[1:]) != self.height or int(gridsize[1:]) != self.width:
-        #     print("width and height are not the same as layout.txt suggests!")
-        #     raise ValueError
+        
         objective_positions = []
         with open(self.grid_layout, 'r') as f:
             lines = f.readlines()
@@ -153,9 +170,10 @@ class GroceryModel(Model):
                         self.grid.place_agent(objective, pos)
                         self.schedule.add(objective)
                         # self.graph.nodes[pos]["type"] = "objective"
-                        if type not in self.objectives.keys():
-                            self.objectives[type] = []
-                        self.objectives[type].append(pos)
+                        if type not in self.objectives_dict.keys():
+                            self.objectives_dict[type] = []
+                        self.objectives_dict[type].append(pos)
+                        self.objectives.append(type)
                         objective_positions.append(pos)
 
     def add_person(self, waited):
@@ -167,8 +185,9 @@ class GroceryModel(Model):
                 if not waited:
                     person = self.create_person()
                     self.waiting_to_enter.append(person)
-                    print("added new person to waiting list")
-                else:
+                    if self.print_bool:
+                        print("added new person to waiting list")
+                elif self.print_bool:
                     print("no entry for person from waiting list")
                 return False #telling step() there is no entry available
             entry_pos = entry_posses.pop(0)
@@ -191,13 +210,14 @@ class GroceryModel(Model):
 
 
     def create_person(self):
-        obs_to_choose = list(self.objectives.keys())
+        # obs_to_choose = list(self.objectives_dict.keys())
+        obs_to_choose = copy.copy(self.objectives)
         if "exit" in obs_to_choose:
             obs_to_choose.remove("exit")
         if "entry" in obs_to_choose:
             obs_to_choose.remove("entry")
         n_obj = int(round(random.expovariate(1/self.n_objectives)))
-        objectives = random.choices((obs_to_choose), k=n_obj)+ ["exit"]
+        objectives = random.choices((obs_to_choose), k=n_obj) + ["exit"]
         speed = random.choices(self.speed_dist[0], weights=self.speed_dist[1])[0]
         familiar = round(random.choices(self.familiar_dist[0], weights=self.familiar_dist[1])[0], 3)
         vision = random.choices(self.vision_dist[0], weights=self.vision_dist[1])[0]
@@ -217,16 +237,16 @@ class GroceryModel(Model):
         self.interactions_per_step.append(0)
         self.standing_still = 0
         self.schedule.step()
-
-        if self.waiting_to_enter:
-            added = self.add_person(waited=True)
-            if not added:
-                print("no place for new waiting person")
-            while added and self.waiting_to_enter:
+        if self.current_step <= self.n_steps:
+            if self.waiting_to_enter:
                 added = self.add_person(waited=True)
+                if not added and self.print_bool:
+                    print("no place for new waiting person")
+                while added and self.waiting_to_enter:
+                    added = self.add_person(waited=True)
 
-        for i in range(self.arrival_times.count(self.current_step)):
-            self.add_person(waited=False)
+            for i in range(self.arrival_times.count(self.current_step)):
+                self.add_person(waited=False)
         self.current_step += 1
     
     def calculate_weights(self, pos, vision):
@@ -242,14 +262,20 @@ class GroceryModel(Model):
         nx.set_edge_attributes(self.graph, name="weight", values=weights)
 
 
-    def run_model(self, n_steps=100):
+    def run_model(self):
         """
         Runs the model for n_steps
         """
-        for i in range(self.n_steps):
+        print("model running...")
+        while self.shop_open:
+        # for i in range(self.n_steps):
             # if i in self.arrival_times:
             #     self.add_person()
             self.step()
+            if not self.persons_instore and self.current_step > self.n_steps:
+                if self.print_booL:
+                    print("ended simulation as everyone was done and no arrivals were expected")
+                self.shop_open = False
 
             # if not any([isinstance(agent, Person) for agent in self.schedule.agents]) and i > self.arrival_times[-1]:
         
@@ -257,6 +283,7 @@ class GroceryModel(Model):
         # print("collected last data")
         if self.log_bool:
             self.log()
+        print("model done")
         return
     
     def calculate_density(self, subgrid):
