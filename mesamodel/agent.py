@@ -28,11 +28,12 @@ class Person(Agent):
         self.tot_cont = 0
         self.vision = vision
         self.n_switches = 0
+        self.distance = 0
 
 
     def get_objectives_coord(self):
         for next_objective in self.objectives:
-            self.objectives_inc_coord.append((next_objective, random.choice(self.model.objectives[next_objective])))
+            self.objectives_inc_coord.append((next_objective, random.choice(self.model.objectives_dict[next_objective])))
 
 
     def sort_objectives(self):
@@ -45,7 +46,7 @@ class Person(Agent):
         self.new_objectives = []
         for obj in self.temp_object:
             self.new_objectives.append((obj[0], obj[1]))
-        self.new_objectives.append(('exit', self.model.objectives['exit'][0]))  # [0] because of [(1,9)], list being returned
+        self.new_objectives.append(('exit', self.model.objectives_dict['exit'][0]))  # [0] because of [(1,9)], list being returned
 
 
     def next_objective(self):
@@ -79,9 +80,11 @@ class Person(Agent):
         for move in legal_moves:
             if move != self.pos:
                 self.check_interactions(move)
+                self.distance += 1
                 self.model.grid.move_agent(self, move)
         # if self.pos == self.current_objective[1]:
         #     self.reached_objective()
+        self.steps_instore += 1
         if self.familiar < 1.0:
             self.familiar = round(self.familiar + 0.01, 2)
         if self.pos == self.current_objective[1]:
@@ -90,7 +93,7 @@ class Person(Agent):
                 return
         # if self.pos != self.route[-1]:
         #     print(f"moved to {self.pos}")
-        self.steps_instore += 1
+        
         self.route.append(self.pos)
 
     
@@ -106,6 +109,7 @@ class Person(Agent):
             self.model.n_done += 1
             self.model.n_interactions.append(self.int_rate)
             self.model.persons_instore.remove(self)
+            self.model.done.append(self)
             return True
 
         else:
@@ -116,7 +120,7 @@ class Person(Agent):
             return False
 
     def check_interactions(self,move):
-        for agent in self.model.grid.get_neighbors(move, moore=self.moore, radius=1, include_center=False):
+        for agent in self.model.grid.get_neighbors(move, moore=self.moore, radius=2, include_center=False):
             if isinstance(agent,Person) == True and agent != self:
                 self.tot_cont =+ 1
                 self.model.interactions_per_step[-1] += 1
@@ -128,7 +132,6 @@ class Person(Agent):
         legal = []
         for move in moves:
             if self.model.grid.out_of_bounds(move):
-                # print("out of bounds move")
                 return legal
             else:
                 blocking_person = [agent for agent in self.model.grid.get_cell_list_contents(move) if isinstance(agent, Person)]
