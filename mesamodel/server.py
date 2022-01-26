@@ -46,7 +46,7 @@ class GroceryServer:
                       {"Label": "waiting_to_enter",
                       "Color": "blue"}],
                          data_collector_name='datacollector')
-        chart3 = ChartModule([{"Label": "mean_interactions",
+        chart3 = ChartModule([{"Label": "mean_interactions_done",
                                "Color": "red"},
                               {"Label": "interactions",
                                 "Color": "blue"},
