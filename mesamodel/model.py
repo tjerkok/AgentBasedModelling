@@ -273,7 +273,7 @@ class GroceryModel(Model):
             #     self.add_person()
             self.step()
             if not self.persons_instore and self.current_step > self.n_steps:
-                if self.print_booL:
+                if self.print_bool:
                     print("ended simulation as everyone was done and no arrivals were expected")
                 self.shop_open = False
 
