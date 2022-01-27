@@ -1,5 +1,3 @@
-from multiprocessing.sharedctypes import Value
-from tkinter.font import families
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.space import SingleGrid, MultiGrid # TODO: do we need multi?
@@ -271,9 +269,11 @@ class GroceryModel(Model):
         # for i in range(self.n_steps):
             # if i in self.arrival_times:
             #     self.add_person()
+            if self.current_step % 300 == 0:
+                print(f"{self.current_step}")
             self.step()
             if not self.persons_instore and self.current_step > self.n_steps:
-                if self.print_booL:
+                if self.print_bool:
                     print("ended simulation as everyone was done and no arrivals were expected")
                 self.shop_open = False
 

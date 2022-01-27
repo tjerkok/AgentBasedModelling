@@ -8,7 +8,6 @@ import dill as pkl
 import numpy as np
 import random
 import copy
-import matplotlib.pyplot as plt
 
 
 def load(exp_number):
@@ -60,20 +59,28 @@ def local_SA(n_runs, SA_txt, config_json="config1.json", log=False):
     with open(config_json, 'r') as f:
         config = json.load(f)
     
-    config_parchange = copy.copy(config)
-    data = {}
-    
     for parameter in pars.keys():
-        data [parameter] = []
-        for value in pars[parameter]:
-            print(f"set {parameter} to {value}")
-            config_parchange[parameter] = value
+        config_parchange = copy.copy(config)
+        data = {}
+        if os.path.exists(f"local_SA_data_{parameter}.pkl"):
+            data = load_SA(f"local_SA_data_{parameter}.pkl")
+            print(f"already did {parameter} at values: {[x[0] for x in data[parameter]]}")
 
-            data_i = multi(n_runs, config_parchange, log)
-            data[parameter].append((value, data_i))
-    
-        with open("local_SA_data.pkl", "wb") as f:
-            pkl.dump(data, f)
+        else:
+            data[parameter] = []
+            
+        for value in pars[parameter]:
+            if value in [x[0] for x in data[parameter]]:
+                print(f"already did {parameter} at {value}")
+            else: 
+                print(f"set {parameter} to {value}")
+                config_parchange[parameter] = value
+
+                data_i = multi(n_runs, config_parchange, log)
+                data[parameter].append((value, data_i))
+        
+                with open(f"local_SA_data_{parameter}.pkl", "wb") as f:
+                    pkl.dump(data, f)
 
     return data
 
@@ -116,8 +123,8 @@ def load_SA(file):
     return data
 
 if __name__ == "__main__":
-    n_combinations = 2
-    n_runs = 1
+    n_combinations = 1
+    n_runs = 10
     SA_txt = "SA_parameter_change.txt"
     config_json = "config1.json"
 
