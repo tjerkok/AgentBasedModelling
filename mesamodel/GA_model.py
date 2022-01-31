@@ -16,7 +16,7 @@ import os
 from agent import Person, Obstacle, Objective
 
 class GroceryModel(Model):
-    def __init__(self, avg_arrival, speed, speed_prob, log=False, print_bool=True):
+    def __init__(self, avg_arrival, speed, speed_prob, log=False, print_bool=False):
         # attributes
         super().__init__()
 #         self.config = config
@@ -26,11 +26,11 @@ class GroceryModel(Model):
         self.n_items = int(1)
         self.grid_layout = "grids/real_less_65x35.txt"
         self.avg_arrival = avg_arrival
-        self.n_steps = int(1800)
+        self.n_steps = int(20)
         
         # self.speed_dist = config["speed_dist"]
-        self.speed1 = int(1)
-        self.speed2 = int(speed)
+        self.speed1 = 1
+        self.speed2 = int(round(speed))
         self.speed2_prob = speed_prob
         self.speed1_prob = 1 - self.speed2_prob
         self.speed_dist = [[self.speed1, self.speed2], [self.speed1_prob, self.speed2_prob]]
@@ -38,7 +38,7 @@ class GroceryModel(Model):
         # self.familiar_dist = config["familiar_dist"]
         self.familiar1 = 1
         self.familiar2 = 0.6
-        self.familiar2_prob = 0.5
+        self.familiar2_prob = speed_prob
         self.familiar1_prob = 1 - self.familiar2_prob
         self.familiar_dist = [[self.familiar1, self.familiar2], [self.familiar1_prob, self.familiar2_prob]]
 
