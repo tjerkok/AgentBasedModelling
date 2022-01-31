@@ -16,7 +16,7 @@ import os
 from agent import Person, Obstacle, Objective
 
 class GroceryModel(Model):
-    def __init__(self, avg_arrival, speed, speed_prob, log=False, print_bool=False):
+    def __init__(self, avg_arrival, speed=7, speed_prob=1.0, log=False, print_bool=False):
         # attributes
         super().__init__()
 #         self.config = config
@@ -26,7 +26,7 @@ class GroceryModel(Model):
         self.n_items = int(1)
         self.grid_layout = "grids/real_less_65x35.txt"
         self.avg_arrival = avg_arrival
-        self.n_steps = int(20)
+        self.n_steps = int(5)
         
         # self.speed_dist = config["speed_dist"]
         self.speed1 = 1
@@ -72,6 +72,7 @@ class GroceryModel(Model):
         self.log_bool = log
         self.print_bool = print_bool
         self.shop_open = True
+        self.already_done = False
 
         # scheduling Poisson distribution times of persons arriving
         for i in range(self.n_persons - 1):
@@ -227,24 +228,35 @@ class GroceryModel(Model):
         """
         Calls step method for each person
         """
-        if self.print_bool:
-            to_arrive = len([a for a in self.arrival_times if a >= self.current_step])
-            print(f"{self.current_step} || in store: {len(self.persons_instore)}, done: {self.n_done}, waiting: {len(self.waiting_to_enter)}, expecting: {to_arrive} | total: {len(self.persons_instore) + self.n_done + len(self.waiting_to_enter) + to_arrive}")
-
-        self.datacollector.collect(self)
-        self.interactions_per_step.append(0)
-        self.standing_still = 0
-        self.schedule.step()
-        if self.current_step <= self.n_steps:
-            if self.waiting_to_enter:
-                added = self.add_person(waited=True)
-                if not added and self.print_bool:
-                    print("no place for new waiting person")
-                while added and self.waiting_to_enter:
+        if self.current_step == 1:
+            print(self.current_step)
+        
+        
+        if self.current_step <= self.n_steps or self.persons_instore:
+            if self.print_bool:
+                to_arrive = len([a for a in self.arrival_times if a >= self.current_step])
+                print(f"{self.current_step} || in store: {len(self.persons_instore)}, done: {self.n_done}, waiting: {len(self.waiting_to_enter)}, closes in: {self.n_steps-self.current_step}")
+    
+            self.datacollector.collect(self)
+            self.interactions_per_step.append(0)
+            self.standing_still = 0
+            self.schedule.step()
+            if self.current_step <= self.n_steps:
+                if self.waiting_to_enter:
                     added = self.add_person(waited=True)
+                    if not added and self.print_bool:
+                        print("no place for new waiting person")
+                    while added and self.waiting_to_enter:
+                        added = self.add_person(waited=True)
+                for i in range(self.arrival_times.count(self.current_step)):
+                    self.add_person(waited=False)
+        elif not self.already_done:
+            self.already_done = True
+            self.datacollector.collect(self)
+            self.running = False
+        else:
+            self.running = False
 
-            for i in range(self.arrival_times.count(self.current_step)):
-                self.add_person(waited=False)
         self.current_step += 1
     
     def calculate_weights(self, pos, vision):
@@ -328,6 +340,6 @@ if __name__ == "__main__":
 
 #     with open('config1.json', 'r') as f:
 #         config = json.load(f)
-
-    model = GroceryModel(avg_arrival, speed, speed_prob)
-    model.run_model()
+    print("TODO")
+    # model = GroceryModel(avg_arrival, speed, speed_prob)
+    # model.run_model()
