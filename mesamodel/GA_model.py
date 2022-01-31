@@ -16,7 +16,7 @@ import os
 from agent import Person, Obstacle, Objective
 
 class GroceryModel(Model):
-    def __init__(self, avg_arrival, speed, speed_prob, log=False, print_bool=False):
+    def __init__(self, avg_arrival, speed, speed_prob, log=False, print_bool=True):
         # attributes
         super().__init__()
 #         self.config = config
