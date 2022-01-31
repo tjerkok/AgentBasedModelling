@@ -1,2 +1,0 @@
-parameter,min,max,step
-vision2_prob,0,1,0.1
