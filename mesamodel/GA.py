@@ -11,7 +11,7 @@ import dill as pkl
 import os
 
 if __name__ == "__main__":
-    name = "jacco"
+    name = "name_here"
     filename = "GlobalSA_" + name
     
     if name == "name_here":
