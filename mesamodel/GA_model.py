@@ -228,8 +228,8 @@ class GroceryModel(Model):
         """
         Calls step method for each person
         """
-        if self.current_step == 1:
-            print(self.current_step)
+        # if self.current_step == 1:
+        #     print(self.current_step)
         
         
         if self.current_step <= self.n_steps or self.persons_instore:
