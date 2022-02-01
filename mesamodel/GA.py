@@ -66,7 +66,9 @@ if __name__ == "__main__":
                 df = iteration_data.append(dataframe, ignore_index=True)
                 with open(f"{filename}.pkl", "wb") as f:
                     pkl.dump(df, f)
+                    f.close()
             else:
                 with open(f"{filename}.pkl", "wb") as f:
                     pkl.dump(iteration_data, f)
+                    f.close()
             
