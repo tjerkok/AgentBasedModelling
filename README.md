@@ -8,7 +8,9 @@
 <br>
 
 ---
-<img src="presentation/graphs_short.gif" width="250" height="250" /><img src="presentation/grid_short.gif" width="250" height="250" />
+<p aling="center">
+    <img src="presentation/graphs_short.gif" width="250" height="250" /><img src="presentation/grid_short.gif" width="250" height="250" />
+</p>
 ---
 
 ## How To Use
