@@ -3,7 +3,7 @@
     "width": 65, 
     "n_persons": 10000, 
     "n_items": 1, 
-    "grid_layout": "grids/real_less_65x35.txt", 
+    "grid_layout": "grids/real_less_65x65.txt", 
     "avg_arrival": 4, 
     "n_steps": 1800,
     "speed1": 1,

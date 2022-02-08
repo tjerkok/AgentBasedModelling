@@ -1,0 +1,5 @@
+type,startx,starty,h/v,length
+entry,2,0,h,2
+exit,10,0,h,2
+wall,1,3,h,5
+chicken,5,5,v,3
