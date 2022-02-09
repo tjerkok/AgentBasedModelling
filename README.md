@@ -16,7 +16,7 @@
 
 ## How To Use
 
-The model can be launched by either running [model.py](mesamodel/model.py) or [__main__.py](mesamodel/__main__.py). [__main__.py](mesamodel/__main.py) runs the Mesa Server. The model configurations can be modified in [config1.json](mesamodel/config1.json) with attributes:
+The model can be launched by either running [model.py](mesamodel/model.py) or [\_\_main\_\_.py](mesamodel/__main__.py). [\_\_main\_\_.py](mesamodel/__main.py) runs the Mesa Server. The model configurations can be modified in [config1.json](mesamodel/config1.json) with attributes:
 
     height : int
         height of the grid
