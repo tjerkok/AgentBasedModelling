@@ -1,5 +1,7 @@
 # Grocery Model: Balancing Customer Interactions and Travelling Distance in Supermarket Design
-## Agent Based Modelling Project
+## Assignment for the course Agent Based Modelling at the University of Amsterdam
+<br>
+
 ### Lars Grim - 13511157
 ### Tjerko Kieft - 11850663
 ### Jorrim Prins - 11038934
@@ -11,6 +13,7 @@
 <p aling="center">
     <img src="presentation/graphs_short.gif" width="250" height="250" /><img src="presentation/grid_short.gif" width="250" height="250" />
 </p>
+
 ---
 
 ## How To Use
