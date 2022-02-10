@@ -25,8 +25,6 @@ class GroceryModel(Model):
                 width of the model
             n_persons : int
                 amount of persons
-            n_items : int
-                average amount of items in the objective list
             grid_layout : string
                 string of the grid txt file
             avg_arrival : float/int
@@ -156,7 +154,6 @@ class GroceryModel(Model):
         self.height = config["height"]
         self.width = config["width"]
         self.n_persons = int(config["n_persons"])
-        self.n_items = int(config["n_items"])
         self.grid_layout = config["grid_layout"]
         self.avg_arrival = config["avg_arrival"]
         self.n_steps = int(config["n_steps"])

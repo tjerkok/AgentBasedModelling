@@ -24,8 +24,6 @@ The model can be launched by either running [model.py](mesamodel/model.py) or [\
         width of the model
     n_persons : int
         amount of persons
-    n_items : int
-        average amount of items in the objective list
     grid_layout : string
         string of the grid txt file
     avg_arrival : float/int

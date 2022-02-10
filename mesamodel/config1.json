@@ -2,7 +2,6 @@
     "height": 65, 
     "width": 65, 
     "n_persons": 10000, 
-    "n_items": 1, 
     "grid_layout": "grids/real_less_65x35.txt", 
     "avg_arrival": 4, 
     "n_steps": 1800,
